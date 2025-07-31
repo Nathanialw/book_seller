@@ -3,6 +3,8 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+
+	"bookmaker.ca/internal/cache"
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -14,8 +16,15 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/home.html",
 	))
 
-	var books = 0
-	tmpl.Execute(w, books)
+	authors := cache.GetAuthors() // This should return []string or []Author
+
+	data := struct {
+		Authors []string
+	}{
+		Authors: authors,
+	}
+
+	tmpl.Execute(w, data)
 }
 
 func AboutHandler(w http.ResponseWriter, r *http.Request) {

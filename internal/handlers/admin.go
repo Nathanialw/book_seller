@@ -14,11 +14,15 @@ func AdminLoginGet(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/login.html",
+		"templates/admin/login.html",
 	))
 
 	d := 0
 	tmpl.Execute(w, d)
+}
+
+func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
 func AddBookForm(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +30,7 @@ func AddBookForm(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/add_book.html",
+		"templates/admin/add_book.html",
 	))
 
 	d := 0
@@ -52,4 +56,16 @@ func AddBookSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/admin/add-book", http.StatusSeeOther)
+}
+
+func AdminHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/partials/header.html",
+		"templates/partials/footer.html",
+		"templates/admin/admin.html",
+	))
+
+	d := 0
+	tmpl.Execute(w, d)
 }

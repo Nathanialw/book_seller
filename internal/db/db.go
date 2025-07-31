@@ -95,3 +95,31 @@ func GetAllBooks() ([]models.Book, error) {
 	}
 	return books, rows.Err()
 }
+
+func GetAuthors() ([]string, error) {
+	rows, err := db.Query(ctx, `
+        SELECT DISTINCT author
+        FROM books
+        ORDER BY author ASC
+    `)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var authors []string
+	for rows.Next() {
+		var author string
+		if err := rows.Scan(&author); err != nil {
+			log.Println("Error scanning author:", err)
+			continue
+		}
+		authors = append(authors, author)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return authors, nil
+}

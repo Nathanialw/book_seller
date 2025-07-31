@@ -17,8 +17,10 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/videos", handlers.VideosHandler).Methods("GET")
 	r.HandleFunc("/search", handlers.SearchHandler).Methods("GET")
 	r.HandleFunc("/admin/login", handlers.AdminLoginGet).Methods("GET")
+	r.HandleFunc("/admin", handlers.AdminHandler).Methods("GET")
 	r.HandleFunc("/admin/add-book", handlers.AddBookForm).Methods("GET")
 
+	r.HandleFunc("/admin/AdminLogin", handlers.AdminLoginHandler).Methods("POST")
 	r.HandleFunc("/admin/add-book", handlers.AddBookSubmit).Methods("POST")
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
 	r.HandleFunc("/SuccessHandler", handlers.SuccessHandler).Methods("POST")

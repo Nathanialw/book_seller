@@ -10,8 +10,13 @@
     </form>
 
     <!-- search and select from a list -->
-    <h2>genres</h2>
     <h2>authors</h2>
+    <ul>
+    {{ range .Authors }}
+        <!-- Later update the href to point to author's page or search -->
+        <li><a href="/search?q={{ . }}">{{ . }}</a></li>
+    {{ end }}
+    </ul>
     <br>
-    <a href="books">Books</a>    
+    <h2><a href="books">All Books</a></h2>
 {{ end }}
