@@ -1,1 +1,6 @@
 export STRIPE_SECRET_KEY=""
+
+export STRIPE_SECRET_KEY="
+sk_test_51Rqloa2NPGaRjqznMlW
+WfnEOjGc0DqPYQFljizqSPpLsLdKZczEamoQ7BEaatctSEndQ2kmekYW0d
+g9Hx11MOUiy006jrs55W6"

@@ -3,6 +3,7 @@ package db
 import (
 	"bookmaker.ca/internal/models"
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 )
@@ -40,7 +41,9 @@ func SearchBooks(query string) ([]models.Book, error) {
 	rows, err := db.Query(ctx, `
         SELECT id, title, author
         FROM books
-        WHERE search @@ plainto_tsquery($1)
+        WHERE title % $1 OR author % $1
+        ORDER BY GREATEST(similarity(title, $1), similarity(author, $1)) DESC
+        LIMIT 20
     `, query)
 	if err != nil {
 		return nil, err
@@ -51,6 +54,41 @@ func SearchBooks(query string) ([]models.Book, error) {
 	for rows.Next() {
 		var b models.Book
 		if err := rows.Scan(&b.ID, &b.Title, &b.Author); err != nil {
+			continue
+		}
+		books = append(books, b)
+	}
+	return books, rows.Err()
+}
+
+func GetBookByID(id int) (*models.Book, error) {
+	var b models.Book
+	err := db.QueryRow(context.Background(), `
+		SELECT id, title, author, price, description
+		FROM books
+		WHERE id = $1
+	`, id).Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description)
+	if err != nil {
+		return nil, fmt.Errorf("book not found: %w", err)
+	}
+	return &b, nil
+}
+
+func GetAllBooks() ([]models.Book, error) {
+	rows, err := db.Query(context.Background(), `
+		SELECT id, title, author, price, description
+		FROM books
+		ORDER BY id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []models.Book
+	for rows.Next() {
+		var b models.Book
+		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description); err != nil {
 			continue
 		}
 		books = append(books, b)

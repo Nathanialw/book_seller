@@ -12,8 +12,15 @@ import (
 //pass in the book_id of the book
 func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
-	book_id, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil || book_id < 0 || book_id >= len(db.Books) {
+	bookID, err := strconv.Atoi(parts[len(parts)-1])
+	println(bookID)
+	if err != nil || bookID <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	book, err := db.GetBookByID(bookID)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -25,10 +32,18 @@ func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/book.html",
 	))
 
-	tmpl.Execute(w, db.Books[book_id])
+	if err := tmpl.Execute(w, book); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
 }
 
 func BookListHandler(w http.ResponseWriter, r *http.Request) {
+	books, err := db.GetAllBooks()
+	if err != nil {
+		http.Error(w, "Failed to load books", http.StatusInternalServerError)
+		return
+	}
+
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
@@ -36,5 +51,7 @@ func BookListHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/booklist.html",
 	))
 
-	tmpl.Execute(w, db.Books)
+	if err := tmpl.Execute(w, books); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
 }
