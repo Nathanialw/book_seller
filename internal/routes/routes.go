@@ -15,7 +15,8 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 			return
 		}
-		// Optional: validate session value
+		// TODO:
+		// validate session value
 		next(w, r)
 	}
 }

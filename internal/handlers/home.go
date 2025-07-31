@@ -7,21 +7,33 @@ import (
 	"bookmaker.ca/internal/cache"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func loggedIn(r *http.Request) bool {
+	cookie, err := r.Cookie("session")
+	if err != nil || cookie.Value == "" {
+		return false
+	}
+	// TODO:
+	// validate session value
+	return true
+}
 
+func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/home.html",
 	))
 
 	authors := cache.GetAuthors() // This should return []string or []Author
+	loggedIn := loggedIn(r)
 
 	data := struct {
-		Authors []string
+		Authors  []string
+		LoggedIn bool
 	}{
-		Authors: authors,
+		Authors:  authors,
+		LoggedIn: loggedIn,
 	}
 
 	tmpl.Execute(w, data)

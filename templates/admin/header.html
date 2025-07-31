@@ -3,9 +3,15 @@
         <h1>📚 Book Maker</h1>
         <nav>
             <a href="/">Home</a> |
+            {{ if .LoggedIn }}
+            <a href="/admin">Admin</a> |
+            {{ end }}
             <a href="/about">About</a> |
             <a href="/blogs">Blogs</a> |
-            <a href="/videos">Videos</a>
+            <a href="/videos">Videos</a> |
+            {{ if .LoggedIn }}
+            <a href="/admin/logout">Logout</a> |
+            {{ end }}
         </nav>
         <hr>
     </header>

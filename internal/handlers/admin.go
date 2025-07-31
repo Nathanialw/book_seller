@@ -13,6 +13,7 @@ import (
 
 	"bookmaker.ca/internal/cache"
 	"bookmaker.ca/internal/db"
+	"bookmaker.ca/internal/models"
 )
 
 func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,48 +67,65 @@ func AdminLogoutHandler(w http.ResponseWriter, r *http.Request) {
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/admin.html",
 	))
 
-	d := 0
+	d := struct {
+		LoggedIn bool
+	}{
+		LoggedIn: true,
+	}
+
 	tmpl.Execute(w, d)
 }
 
 func AdminBlogHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/blogs.html",
 	))
 
-	d := 0
+	d := struct {
+		LoggedIn bool
+	}{
+		LoggedIn: true,
+	}
 	tmpl.Execute(w, d)
 }
 
 func AdminVideosHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/videos.html",
 	))
 
-	d := 0
+	d := struct {
+		LoggedIn bool
+	}{
+		LoggedIn: true,
+	}
 	tmpl.Execute(w, d)
 }
 
 func AddBookForm(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/add_book.html",
 	))
 
-	d := 0
+	d := struct {
+		LoggedIn bool
+	}{
+		LoggedIn: true,
+	}
 	tmpl.Execute(w, d)
 }
 
@@ -177,11 +195,19 @@ func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/edit_book.html",
 	))
-	tmpl.Execute(w, book)
+
+	d := struct {
+		LoggedIn bool
+		Book     models.Book
+	}{
+		LoggedIn: true,
+		Book:     *book,
+	}
+	tmpl.Execute(w, d)
 }
 
 func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
@@ -230,11 +256,19 @@ func AllBooksHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/partials/header.html",
+		"templates/admin/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/edit_books.html",
 	))
-	tmpl.Execute(w, books)
+
+	d := struct {
+		LoggedIn bool
+		Books    []models.Book
+	}{
+		LoggedIn: true,
+		Books:    books,
+	}
+	tmpl.Execute(w, d)
 }
 
 func DeleteBookFormHandler(w http.ResponseWriter, r *http.Request) {
