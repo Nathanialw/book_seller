@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Book Store</title>
-</head>
-<body>
-    <h1>Books</h1>
+{{define "content"}}
     {{range .}}
         <div>
             <h3><a href="book/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
@@ -12,5 +6,4 @@
             <img src="{{.Image}}" width="100">            
         </div>
     {{end}}
-</body>
-</html>
+{{end}}

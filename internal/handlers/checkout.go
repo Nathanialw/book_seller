@@ -16,7 +16,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	if returnURL == "" {
 		returnURL = "404" // default fallback
 	}
-	returnURL = "http://127.0.0.1:6600/" + returnURL
+	returnURL = "http://127.0.0.1:6600/book/" + returnURL
 
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),

@@ -1,0 +1,44 @@
+Here’s a typical layout for a growing eCommerce site project:
+
+bookmaker.ca/
+├── cmd/
+│   └── main.go               # Entry point to start the server
+├── internal/
+│   ├── config/               # Configuration (env vars, app settings)
+│   │   └── config.go
+│   ├── db/                   # Database access and setup
+│   │   ├── db.go             # DB init and connection pool
+│   │   └── migrations/       # SQL migration files
+│   ├── models/               # Domain models (Book, User, Order, etc.)
+│   │   └── book.go
+│   ├── handlers/             # HTTP handlers for routes
+│   │   ├── book_handler.go
+│   │   └── checkout_handler.go
+│   ├── services/             # Business logic (payment, inventory, etc.)
+│   │   └── payment.go
+│   ├── routes/               # Route initialization
+│   │   └── routes.go
+│   ├── middleware/           # Custom middleware (logging, auth, CORS, etc.)
+│   │   └── logging.go
+│   └── utils/                # Helpers/utilities (email, slugify, etc.)
+│       └── email.go
+├── static/                   # Static assets (CSS, JS, images)
+│   ├── css/
+│   └── js/
+├── templates/                # HTML templates
+│   ├── base.html
+│   └── booklist.html
+├── go.mod
+└── README.md
+
+
+| Directory     | Purpose                                                          |
+| ------------- | ---------------------------------------------------------------- |
+| `config/`     | Load & store environment/config values.                          |
+| `db/`         | Initialize DB connection & hold raw SQL or migration files.      |
+| `models/`     | Structs and their methods (e.g., `Book`, `User`, etc.).          |
+| `handlers/`   | HTTP handlers that bind models + services to routes.             |
+| `services/`   | Business rules, Stripe logic, user auth, etc.                    |
+| `routes/`     | Setup Gorilla Mux or chi router tree.                            |
+| `middleware/` | Reusable middleware like `Recover()`, `Logger()`, `Auth()`, etc. |
+| `utils/`      | Pure functions, formatting, email sending, etc.                  |

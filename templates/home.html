@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Book Store</title>
-</head>
-<body>
+{{ define "content" }}
     <h1>Welcome to Book Store!</h1>
     <br>
     
     <!-- go to page of books returning a list of found -->
-    <h2>search for Title or Author</h2> 
+    <h2>Search for Title or Author</h2> 
     <input type="text" name="search" id="search">
     <input type="button" value="Submit">
 
@@ -17,5 +12,4 @@
     <h2>authors</h2>
     <br>
     <a href="books">Books</a>    
-</body>
-</html>
+{{ end }}
