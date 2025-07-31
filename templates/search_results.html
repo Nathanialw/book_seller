@@ -1,0 +1,13 @@
+{{ define "content" }}
+    <h1>Search Results</h1>
+    {{ if . }}
+        <ul>
+        {{ range . }}
+            <li><a href="/book/{{.ID}}">{{.Title}}</a> by {{.Author}}</li>
+        {{ end }}
+        </ul>
+    {{ else }}
+        <p>No books found for your search.</p>
+    {{ end }}
+    <a href="/">Back to Home</a>
+{{ end }}

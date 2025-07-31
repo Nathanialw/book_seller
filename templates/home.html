@@ -4,8 +4,10 @@
     
     <!-- go to page of books returning a list of found -->
     <h2>Search for Title or Author</h2> 
-    <input type="text" name="search" id="search">
-    <input type="button" value="Submit">
+    <form action="/search" method="GET">
+        <input type="text" name="q" id="search" placeholder="Enter search term">
+        <button type="submit">Submit</button>
+    </form>
 
     <!-- search and select from a list -->
     <h2>genres</h2>

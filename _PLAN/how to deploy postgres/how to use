@@ -1,0 +1,10 @@
+#Use a strong password
+openssl rand -base64 24
+#Example: H9aj!k2dfLz83Jd@Ql0Zw38f
+Store it securely in an .env file or a Go config.yaml, never hardcoded.
+
+#Make it executable:
+chmod +x setup_postgres.sh
+
+#Run it:
+./setup_postgres.sh
