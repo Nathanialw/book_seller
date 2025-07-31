@@ -8,8 +8,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil || cookie.Value == "" {
+			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+			return
+		}
+		// Optional: validate session value
+		next(w, r)
+	}
+}
+
 func SetupRoutes() *mux.Router {
 	r := mux.NewRouter()
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
 	r.HandleFunc("/about", handlers.AboutHandler).Methods("GET")
 	r.HandleFunc("/videos", handlers.VideosHandler).Methods("GET")
@@ -19,21 +33,24 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/book/{id}", handlers.BookDetailHandler).Methods("GET")
 	r.HandleFunc("/search", handlers.SearchHandler).Methods("GET")
 
-	r.HandleFunc("/admin/login", handlers.AdminLoginGet).Methods("GET")
-	r.HandleFunc("/admin", handlers.AdminHandler).Methods("GET")
-	r.HandleFunc("/admin/add-book", handlers.AddBookForm).Methods("GET")
-
-	r.HandleFunc("/admin/AdminLogin", handlers.AdminLoginHandler).Methods("POST")
-	r.HandleFunc("/admin/add-book", handlers.AddBookHandler).Methods("POST")
-	r.HandleFunc("/admin/update-book", handlers.UpdateBookHandler).Methods("POST")
-
-	r.HandleFunc("/admin/edit-books", handlers.AllBooksHandler).Methods("GET")
-	r.HandleFunc("/admin/edit-book/{id}", handlers.EditBookFormHandler).Methods("GET")
-	r.HandleFunc("/admin/delete-book/{id}", handlers.DeleteBookFormHandler).Methods("GET")
-
+	// Payment
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
 	r.HandleFunc("/SuccessHandler", handlers.SuccessHandler).Methods("POST")
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	// Admin
+	admin := r.PathPrefix("/admin").Subrouter()
+	admin.HandleFunc("/login", handlers.AdminLoginHandler).Methods("GET")
+	admin.HandleFunc("/AdminLogin", handlers.AdminLoginValidateHandler).Methods("POST")
+	admin.HandleFunc("/logout", RequireAuth(handlers.AdminLogoutHandler)).Methods("GET")
+	admin.HandleFunc("/blogs", RequireAuth(handlers.AdminBlogHandler)).Methods("GET")
+	admin.HandleFunc("/videos", RequireAuth(handlers.AdminVideosHandler)).Methods("GET")
+	admin.HandleFunc("", RequireAuth(handlers.AdminHandler)).Methods("GET")
+	admin.HandleFunc("/add-book", RequireAuth(handlers.AddBookForm)).Methods("GET")
+	admin.HandleFunc("/add-book", RequireAuth(handlers.AddBookHandler)).Methods("POST")
+	admin.HandleFunc("/update-book", RequireAuth(handlers.UpdateBookHandler)).Methods("POST")
+	admin.HandleFunc("/edit-books", RequireAuth(handlers.AllBooksHandler)).Methods("GET")
+	admin.HandleFunc("/edit-book/{id}", RequireAuth(handlers.EditBookFormHandler)).Methods("GET")
+	admin.HandleFunc("/delete-book/{id}", RequireAuth(handlers.DeleteBookFormHandler)).Methods("DELETE")
+
 	return r
 }

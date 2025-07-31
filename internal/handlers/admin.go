@@ -15,8 +15,7 @@ import (
 	"bookmaker.ca/internal/db"
 )
 
-//TODO: add validation for admin login
-func AdminLoginGet(w http.ResponseWriter, r *http.Request) {
+func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
@@ -28,8 +27,40 @@ func AdminLoginGet(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, d)
 }
 
-func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+func validLogin(username, password string) bool {
+	// For demo purposes only — replace with real DB check
+	const adminUser = "admin"
+	const adminPass = "securepassword123"
+
+	return username == adminUser && password == adminPass
+}
+
+func AdminLoginValidateHandler(w http.ResponseWriter, r *http.Request) {
+	// Authenticate user
+	if validLogin(r.FormValue("username"), r.FormValue("password")) {
+		// Set cookie (you could use secure sessions like gorilla/sessions)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    "some-auth-token-or-username",
+			Path:     "/",
+			HttpOnly: true,
+			// TODO:
+			// Secure: true, // use in production
+		})
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+	http.Error(w, "Invalid login", http.StatusUnauthorized)
+}
+
+func AdminLogoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1, // Expire the cookie
+	})
+	http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 }
 
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +69,30 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
 		"templates/admin/admin.html",
+	))
+
+	d := 0
+	tmpl.Execute(w, d)
+}
+
+func AdminBlogHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/partials/header.html",
+		"templates/partials/footer.html",
+		"templates/admin/blogs.html",
+	))
+
+	d := 0
+	tmpl.Execute(w, d)
+}
+
+func AdminVideosHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/partials/header.html",
+		"templates/partials/footer.html",
+		"templates/admin/videos.html",
 	))
 
 	d := 0
@@ -182,7 +237,6 @@ func AllBooksHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, books)
 }
 
-//TODO: Add delete logic
 func DeleteBookFormHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/admin/delete-book/")
 	bookID, err := strconv.Atoi(idStr)
