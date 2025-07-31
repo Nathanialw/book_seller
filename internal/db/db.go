@@ -98,11 +98,22 @@ func GetAuthors() ([]string, error) {
 }
 
 func UpdateBook(id int, title, author string, price float64, desc, img string) error {
-	query := `
-		UPDATE books SET title=$1, author=$2, price=$3, description=$4, image_path=$5
-		WHERE id=$6
-	`
-	_, err := db.Exec(ctx, query, title, author, price, desc, img, id)
+	var query string
+	var err error
+
+	if img != "" {
+		query = `
+			UPDATE books SET title=$1, author=$2, price=$3, description=$4, image_path=$5
+			WHERE id=$6
+		`
+		_, err = db.Exec(ctx, query, title, author, price, desc, img, id)
+	} else {
+		query = `
+			UPDATE books SET title=$1, author=$2, price=$3, description=$4
+			WHERE id=$5
+		`
+		_, err = db.Exec(ctx, query, title, author, price, desc, id)
+	}
 	return err
 }
 
