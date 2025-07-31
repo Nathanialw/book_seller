@@ -25,10 +25,11 @@ func SetupRoutes() *mux.Router {
 
 	r.HandleFunc("/admin/AdminLogin", handlers.AdminLoginHandler).Methods("POST")
 	r.HandleFunc("/admin/add-book", handlers.AddBookHandler).Methods("POST")
-	r.HandleFunc("/admin/edit-books", handlers.AllBooksHandler)
-	r.HandleFunc("/admin/edit-book/{id}", handlers.EditBookFormHandler)
-	r.HandleFunc("/admin/delete-book/{id}", handlers.DeleteBookFormHandler)
-	r.HandleFunc("/admin/update-book", handlers.UpdateBookHandler)
+	r.HandleFunc("/admin/update-book", handlers.UpdateBookHandler).Methods("POST")
+
+	r.HandleFunc("/admin/edit-books", handlers.AllBooksHandler).Methods("GET")
+	r.HandleFunc("/admin/edit-book/{id}", handlers.EditBookFormHandler).Methods("GET")
+	r.HandleFunc("/admin/delete-book/{id}", handlers.DeleteBookFormHandler).Methods("GET")
 
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
 	r.HandleFunc("/SuccessHandler", handlers.SuccessHandler).Methods("POST")

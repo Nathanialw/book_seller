@@ -117,28 +117,6 @@ func UpdateBook(id int, title, author string, price float64, desc, img string) e
 	return err
 }
 
-// func GetAllBooks() ([]models.Book, error) {
-// 	rows, err := db.Query(ctx, `
-// 		SELECT id, title, author, price, description, image_path
-// 		FROM books
-// 		ORDER BY id ASC
-// 	`)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	var books []models.Book
-// 	for rows.Next() {
-// 		var b models.Book
-// 		err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description, &b.Image)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		books = append(books, b)
-// 	}
-// 	return books, nil
-// }
 func GetAllBooks() ([]models.Book, error) {
 	rows, err := db.Query(context.Background(), `
 		SELECT id, title, author, price, description, image_path
@@ -161,4 +139,14 @@ func GetAllBooks() ([]models.Book, error) {
 	}
 
 	return books, rows.Err()
+}
+
+func DeleteBook(id int) error {
+	// Before deleting the book:
+	// book, err := db.GetBookByID(bookID)
+	// if err == nil && book.ImagePath != "" {
+	// 	os.Remove("static/img/" + book.ImagePath)
+	// }
+	_, err := db.Exec(ctx, `DELETE FROM books WHERE id = $1`, id)
+	return err
 }

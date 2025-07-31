@@ -30,3 +30,21 @@ func GetAuthors() []string {
 	defer mu.RUnlock()
 	return authors
 }
+
+func UpdateAuthors() {
+	if err := updateAuthors(); err != nil {
+		log.Printf("Failed to update authors cache: %v", err)
+	}
+}
+
+func updateAuthors() error {
+	newAuthors, err := db.GetAuthors()
+	if err != nil {
+		return err
+	}
+	mu.Lock()
+	authors = newAuthors
+	mu.Unlock()
+	log.Printf("Updated authors cache with %d entries", len(newAuthors))
+	return nil
+}

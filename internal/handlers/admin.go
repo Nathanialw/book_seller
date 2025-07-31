@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"bookmaker.ca/internal/cache"
 	"bookmaker.ca/internal/db"
 )
 
@@ -79,7 +81,7 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		filename := filepath.Base(header.Filename)
 		imagePath = filename
-		out, err := os.Create(imagePath)
+		out, err := os.Create("static/img/" + imagePath)
 		if err != nil {
 			http.Error(w, "Unable to save file", http.StatusInternalServerError)
 			return
@@ -99,7 +101,8 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/edit-books", http.StatusSeeOther)
+	cache.UpdateAuthors()
+	http.Redirect(w, r, "/admin/add-book", http.StatusSeeOther)
 }
 
 func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +148,7 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		defer file.Close()
 		imagePath = fmt.Sprintf("%s", handler.Filename)
-		dst, err := os.Create(imagePath)
+		dst, err := os.Create("static/img/" + imagePath)
 		if err == nil {
 			defer dst.Close()
 			io.Copy(dst, file)
@@ -157,6 +160,8 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to update", http.StatusInternalServerError)
 		return
 	}
+
+	cache.UpdateAuthors()
 	http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
 }
 
@@ -186,13 +191,13 @@ func DeleteBookFormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// book, err := db.GetBookByID(bookID)
-	println("Deleting book", bookID)
-
+	err = db.DeleteBook(bookID)
 	if err != nil {
-		http.Error(w, "Book not found", http.StatusNotFound)
+		http.Error(w, "Failed to delete book", http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/edit-books", http.StatusSeeOther)
+	log.Printf("Deleted book with ID %d", bookID)
+	cache.UpdateAuthors()
+	http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
 }
