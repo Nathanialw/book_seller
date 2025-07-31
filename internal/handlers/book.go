@@ -13,7 +13,7 @@ import (
 func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	bookID, err := strconv.Atoi(parts[len(parts)-1])
-	println(bookID)
+
 	if err != nil || bookID <= 0 {
 		http.NotFound(w, r)
 		return

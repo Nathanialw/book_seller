@@ -3,7 +3,6 @@ package db
 import (
 	"bookmaker.ca/internal/models"
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 )
@@ -20,19 +19,16 @@ func InitDB() {
 }
 
 // InsertBook inserts a new book row into the books table.
-func InsertBook(title, author string, price float64, description string) error {
-	// Prepare SQL insert statement with placeholders
+func InsertBook(title, author string, price float64, description, imagePath string) error {
 	sql := `
-		INSERT INTO books (title, author, price, description)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO books (title, author, price, description, image_path)
+		VALUES ($1, $2, $3, $4, $5)
 	`
-
-	_, err := db.Exec(ctx, sql, title, author, price, description)
+	_, err := db.Exec(ctx, sql, title, author, price, description, imagePath)
 	if err != nil {
 		log.Printf("Failed to insert book: %v\n", err)
 		return err
 	}
-
 	log.Printf("Inserted book: %s by %s\n", title, author)
 	return nil
 }
@@ -64,36 +60,13 @@ func SearchBooks(query string) ([]models.Book, error) {
 func GetBookByID(id int) (*models.Book, error) {
 	var b models.Book
 	err := db.QueryRow(context.Background(), `
-		SELECT id, title, author, price, description
+		SELECT id, title, author, price, description, image_path
 		FROM books
 		WHERE id = $1
-	`, id).Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description)
+	`, id).Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description, &b.Image)
 	if err != nil {
-		return nil, fmt.Errorf("book not found: %w", err)
 	}
 	return &b, nil
-}
-
-func GetAllBooks() ([]models.Book, error) {
-	rows, err := db.Query(context.Background(), `
-		SELECT id, title, author, price, description
-		FROM books
-		ORDER BY id
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var books []models.Book
-	for rows.Next() {
-		var b models.Book
-		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description); err != nil {
-			continue
-		}
-		books = append(books, b)
-	}
-	return books, rows.Err()
 }
 
 func GetAuthors() ([]string, error) {
@@ -122,4 +95,59 @@ func GetAuthors() ([]string, error) {
 	}
 
 	return authors, nil
+}
+
+func UpdateBook(id int, title, author string, price float64, desc, img string) error {
+	query := `
+		UPDATE books SET title=$1, author=$2, price=$3, description=$4, image_path=$5
+		WHERE id=$6
+	`
+	_, err := db.Exec(ctx, query, title, author, price, desc, img, id)
+	return err
+}
+
+// func GetAllBooks() ([]models.Book, error) {
+// 	rows, err := db.Query(ctx, `
+// 		SELECT id, title, author, price, description, image_path
+// 		FROM books
+// 		ORDER BY id ASC
+// 	`)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var books []models.Book
+// 	for rows.Next() {
+// 		var b models.Book
+// 		err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description, &b.Image)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		books = append(books, b)
+// 	}
+// 	return books, nil
+// }
+func GetAllBooks() ([]models.Book, error) {
+	rows, err := db.Query(context.Background(), `
+		SELECT id, title, author, price, description, image_path
+		FROM books
+		ORDER BY id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []models.Book
+	for rows.Next() {
+		var b models.Book
+		b.Image = ""
+		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Price, &b.Description, &b.Image); err != nil {
+			continue
+		}
+		books = append(books, b)
+	}
+
+	return books, rows.Err()
 }

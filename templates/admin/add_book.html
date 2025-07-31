@@ -1,7 +1,7 @@
 {{ define "content" }}
 <h1>Add a New Book</h1>
 
-<form action="/admin/add-book" method="POST" style="max-width: 400px; margin-top: 20px;">
+<form action="/admin/add-book" method="POST" enctype="multipart/form-data" style="max-width: 400px; margin-top: 20px;">
     <label for="title">Title</label><br>
     <input type="text" id="title" name="title" required><br><br>
 
@@ -12,7 +12,10 @@
     <input type="text" id="price" name="price" required><br><br>
 
     <label for="description">Description</label><br>
-    <textarea id="description" name="description" rows="4" cols="40"></textarea><br><br>
+    <textarea id="description" name="description" rows="4" cols="40" required></textarea><br><br>
+
+    <label for="cover">Cover Image</label><br>
+    <input type="file" id="cover" name="cover" accept="image/*" required><br><br>
 
     <input type="submit" value="Add Book">
 </form>

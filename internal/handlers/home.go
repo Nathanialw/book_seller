@@ -48,3 +48,14 @@ func VideosHandler(w http.ResponseWriter, r *http.Request) {
 	d := 0
 	tmpl.Execute(w, d)
 }
+
+func BlogsHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/partials/header.html",
+		"templates/partials/footer.html",
+		"templates/blog.html",
+	))
+	d := 0
+	tmpl.Execute(w, d)
+}

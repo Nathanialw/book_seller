@@ -1,0 +1,26 @@
+{{ define "content" }}
+<h1>Edit Book</h1>
+<form action="/admin/update-book" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="id" value="{{ .ID }}">
+    
+    <label>Title:</label><br>
+    <input type="text" name="title" value="{{ .Title }}"><br><br>
+
+    <label>Author:</label><br>
+    <input type="text" name="author" value="{{ .Author }}"><br><br>
+
+    <label>Price:</label><br>
+    <input type="text" name="price" value="{{ .Price }}"><br><br>
+
+    <label>Description:</label><br>
+    <textarea name="description"  required>{{ .Description }}</textarea><br><br>
+
+    <p>Current image: {{ .Image }}</p>
+    <img src="/static/img/{{ .Image }}" alt="" srcset="" width="100px"><br>
+    
+    <label>Change Image:</label><br>
+    <input type="file" name="image" value="{{ .Image }}"><br><br>
+
+    <input type="submit" value="Update Book">
+</form>
+{{ end }}
