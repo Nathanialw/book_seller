@@ -12,6 +12,12 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
+	returnURL := r.FormValue("id")
+	if returnURL == "" {
+		returnURL = "404" // default fallback
+	}
+	returnURL = "http://127.0.0.1:6600/" + returnURL
+
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
@@ -29,7 +35,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 		//TODO: Use real pages with full URLs
 		SuccessURL: stripe.String("http://127.0.0.1:6600/success"),
-		CancelURL:  stripe.String("http://127.0.0.1:6600/cancel"),
+		CancelURL:  stripe.String(returnURL),
 	}
 
 	s, err := session.New(params)

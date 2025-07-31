@@ -4,15 +4,12 @@ import (
 	"html/template"
 	"net/http"
 
-	"bookmaker.ca/internal/models"
+	"bookmaker.ca/internal/data"
 )
 
-func BookListHandler(w http.ResponseWriter, r *http.Request) {
-	books := []models.Book{
-		{ID: 1, Title: "Go in Action", Author: "William Kennedy", Price: 29.99, Image: "/static/img/go.jpg"},
-		{ID: 2, Title: "The Go Programming Language", Author: "Alan Donovan", Price: 34.99, Image: "/static/img/go2.jpg"},
-	}
-
-	tmpl := template.Must(template.ParseFiles("templates/booklist.html"))
-	tmpl.Execute(w, books)
+//pass in the book_id of the book
+func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
+	book_id := 0
+	tmpl := template.Must(template.ParseFiles("templates/book.html"))
+	tmpl.Execute(w, data.Books[book_id])
 }
