@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Store</title>
+</head>
+<body>
+    <h1>Welcome ro Book Maker!</h1>
+    {{range .}}
+        <div>
+            <h3>{{.Title}} by {{.Author}}</h3>
+            <p>${{.Price}}</p>
+            <img src="{{.Image}}" width="100">
+            <form action="/checkout" method="POST">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit">Buy</button>
+            </form>
+        </div>
+    {{end}}
+</body>
+</html>
