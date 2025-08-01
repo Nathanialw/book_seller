@@ -8,3 +8,6 @@ chmod +x setup_postgres.sh
 
 #Run it:
 ./setup_postgres.sh
+
+
+
