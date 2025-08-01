@@ -3,6 +3,7 @@
 # --- CONFIG ---
 DB_NAME="bookmaker"
 DB_USER="bookuser"
+#TODO: Change this for production!
 DB_PASS="securepassword"  # Change this for production!
 
 # Install PostgreSQL (if not already installed)
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS books (
     author TEXT NOT NULL,
     price NUMERIC(10, 2),
     description TEXT,
+    image_path TEXT NOT NULL,
     search tsvector GENERATED ALWAYS AS (
         to_tsvector('english', title || ' ' || author || ' ' || coalesce(description, ''))
     ) STORED
