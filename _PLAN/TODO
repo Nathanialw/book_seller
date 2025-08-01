@@ -10,3 +10,4 @@ g9Hx11MOUiy006jrs55W6"
 
 #make a script to collect static files as well
 go build -buildvcs=false -o deploy/main.exe ./cmd
+go build -buildvcs=false -o deploy/main ./cmd
