@@ -51,7 +51,7 @@ func SetupRoutes() *mux.Router {
 	admin.HandleFunc("/update-book", RequireAuth(handlers.UpdateBookHandler)).Methods("POST")
 	admin.HandleFunc("/edit-books", RequireAuth(handlers.AllBooksHandler)).Methods("GET")
 	admin.HandleFunc("/edit-book/{id}", RequireAuth(handlers.EditBookFormHandler)).Methods("GET")
-	admin.HandleFunc("/delete-book/{id}", RequireAuth(handlers.DeleteBookFormHandler)).Methods("DELETE")
+	admin.HandleFunc("/delete-book/{id}", RequireAuth(handlers.DeleteBookFormHandler)).Methods("GET")
 
 	return r
 }
