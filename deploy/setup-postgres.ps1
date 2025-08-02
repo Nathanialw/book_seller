@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS book_variants (
 );
 
 CREATE INDEX IF NOT EXISTS idx_books_search ON books USING GIN(search);
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE INDEX IF NOT EXISTS trgm_idx_title ON books USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS trgm_idx_author ON books USING GIN (author gin_trgm_ops);
@@ -94,7 +95,7 @@ GRANT USAGE, SELECT, UPDATE ON SEQUENCE book_variants_id_seq TO $DB_USER;
 
 # Write the SQL to temp file and run it
 $tempSqlFile = "$env:TEMP\init_db.sql"
-$setupSql | Out-File -Encoding UTF8 $tempSqlFile
+$setupSql | Set-Content -Encoding UTF8 $tempSqlFile
 psql -U postgres -d $DB_NAME -f $tempSqlFile
 Remove-Item $tempSqlFile
 
