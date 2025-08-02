@@ -1,16 +1,24 @@
+{{ define "title" }}
+    <title>{{.Title}}</title>
+{{ end }}
+
 {{ define "content" }}
     <h1>Book</h1>
     <h3>{{.Title}} by {{.Author}}</h3>
     <p>{{.Description}}</p>
     
-    {{ range .Variants }}
-        <p>${{.Price}}</p>
-        <p>{{.Stock}}</p>
-        <p>{{.Color}}</p>
-        <img src="/static/img/{{ .ImagePath }}" alt="Book Cover" width="100">
-        <form action="/checkout" method="POST">
-            <input type="hidden" name="id" value="{{$.ID}}">
-            <button type="submit">Buy</button>
-        </form>
+    {{ if .Variants }}
+        {{ range .Variants }}
+            <p>${{.Price}}</p>
+            <p>{{.Stock}}</p>
+            <p>{{.Color}}</p>
+            <img src="/static/img/{{ .ImagePath }}" alt="Book Cover" width="100">
+            <form action="/checkout" method="POST">
+                <input type="hidden" name="id" value="{{$.ID}}">
+                <button type="submit">Buy</button>
+            </form>
+        {{ end }}
+    {{ else }}
+        <p>No variants found</p>
     {{ end }}
 {{ end }}
