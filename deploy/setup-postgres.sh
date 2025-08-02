@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
-    price NUMERIC(10, 2),
     description TEXT,
     image_path TEXT NOT NULL,
     search tsvector GENERATED ALWAYS AS (
@@ -69,6 +68,7 @@ CREATE TABLE IF NOT EXISTS book_variants (
     id SERIAL PRIMARY KEY,
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     color TEXT NOT NULL,
+    price NUMERIC(10, 2),
     stock INTEGER NOT NULL CHECK (stock >= 0)
 );
 
