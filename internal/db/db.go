@@ -313,6 +313,13 @@ func DeleteBook(id int) error {
 	// 	os.Remove("static/img/" + book.ImagePath)
 	// }
 	_, err := db.Exec(ctx, `DELETE FROM books WHERE id = $1`, id)
+	if err != nil {
+		log.Printf("error deleting book: %v\n", err)
+	}
+	_, err = db.Exec(ctx, `DELETE FROM book_variants WHERE book_id = $1`, id)
+	if err != nil {
+		log.Printf("error deleting variants: %v\n", err)
+	}
 	return err
 }
 

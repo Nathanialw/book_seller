@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -144,35 +142,7 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 	// Get form values for the book
 	title := r.FormValue("title")
 	author := r.FormValue("author")
-	priceStr := r.FormValue("price")
 	description := r.FormValue("description")
-
-	// Convert price to float
-	price, err := strconv.ParseFloat(priceStr, 64)
-	if err != nil {
-		http.Error(w, "Invalid price", http.StatusBadRequest)
-		return
-	}
-
-	// Handle cover image upload
-	file, header, err := r.FormFile("cover")
-	var imagePath string
-	if err == nil {
-		defer file.Close()
-		filename := filepath.Base(header.Filename)
-		imagePath = filename
-		out, err := os.Create("static/img/" + imagePath)
-		if err != nil {
-			http.Error(w, "Unable to save file", http.StatusInternalServerError)
-			return
-		}
-		defer out.Close()
-		_, err = io.Copy(out, file)
-		if err != nil {
-			http.Error(w, "Failed to save file", http.StatusInternalServerError)
-			return
-		}
-	}
 
 	// Insert the book into the books table (no variants yet)
 	bookID, err := db.InsertBookReturningID(title, author, description)
@@ -182,12 +152,13 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Now process the variants
-	colors := r.Form["color[]"]                              // Array of colors
-	stocks := r.Form["stock[]"]                              // Array of stock values
-	variantImages := r.MultipartForm.File["variant_image[]"] // Array of variant images
+	colors := r.Form["color"] // Array of colors
+	stocks := r.Form["stock"] // Array of stock values
+	prices := r.Form["price"]
+	imageFiles := r.MultipartForm.File["variant_image"] // Array of variant images
 
 	// We need to ensure all arrays have the same length
-	if len(colors) != len(stocks) || len(colors) != len(variantImages) {
+	if len(colors) != len(stocks) || len(colors) != len(imageFiles) {
 		http.Error(w, "Mismatch in variant data", http.StatusBadRequest)
 		return
 	}
@@ -196,34 +167,39 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 	for i := range colors {
 		color := colors[i]
 		stock, _ := strconv.Atoi(stocks[i])
-		variantImage := variantImages[i]
+		imagePath := ""
 
-		// Save the variant image
-		variantImagePath := ""
-		if variantImage != nil {
-			file, err := variantImage.Open()
-			if err != nil {
-				http.Error(w, "Failed to read variant image", http.StatusInternalServerError)
-				return
-			}
-			defer file.Close()
+		price, err := strconv.ParseFloat(prices[i], 64)
+		if err != nil {
+			http.Error(w, "Invalid price", http.StatusBadRequest)
+			return
+		}
 
-			variantImagePath = fmt.Sprintf("static/img/%s", filepath.Base(variantImage.Filename))
-			out, err := os.Create(variantImagePath)
+		// Override only if a new file was uploaded
+		if i < len(imageFiles) {
+			file, err := imageFiles[i].Open()
 			if err != nil {
-				http.Error(w, "Failed to save variant image", http.StatusInternalServerError)
-				return
-			}
-			defer out.Close()
-			_, err = io.Copy(out, file)
-			if err != nil {
-				http.Error(w, "Failed to save variant image", http.StatusInternalServerError)
-				return
+				log.Printf("Failed to open file %d: %v", i, err)
+			} else {
+				defer file.Close()
+				imagePath = imageFiles[i].Filename
+				savePath := "static/img/" + imagePath
+
+				dst, err := os.Create(savePath)
+				if err != nil {
+					log.Printf("Failed to create file %d: %v", i, err)
+				} else {
+					defer dst.Close()
+					_, err = io.Copy(dst, file)
+					if err != nil {
+						log.Printf("Failed to write file %d: %v", i, err)
+					}
+				}
 			}
 		}
 
 		// Insert the variant into the book_variants table
-		err = db.InsertVariant(bookID, color, stock, price, variantImagePath)
+		err = db.InsertVariant(bookID, color, stock, price, imagePath)
 		if err != nil {
 			http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
 			return
