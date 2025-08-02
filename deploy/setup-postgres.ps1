@@ -60,7 +60,6 @@ psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
 # Set up schema and extensions
 $setupSql = @"
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
