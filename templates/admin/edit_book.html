@@ -30,22 +30,27 @@
                 <input type="text" name="stock" value="{{ .Stock }}" required><br>
 
                 <br>
-                <label>Current Image:</label>
-                <input name="existing_image_path" value="{{ .ImagePath }}">
+                <label>Current Image: {{ .ImagePath }}</label>
+                <input type="hidden" name="existing_image_path" value="{{ .ImagePath }}">
                 <br>
-                <img src="/static/img/{{ .ImagePath }}" alt="variant-image" width="100px">
+                <img src="/static/img/{{ .ImagePath }}" value="{{ .ImagePath }}" alt="variant-image" width="100px">
                 <br>
                 
                 <label>Change Image:</label>
                 <input type="file" name="variant_image"><br><br>
+
+                <!-- Inside your main form -->
+                 <input type="hidden" name="variant_id" value="{{ .ID }}">
+                <button type="submit" name="action" value="remove_variant">Remove Variant</button>
             </div>
         {{ end }}
     </div>
 
-    <button type="button" id="add-variant">Add Another Variant</button><br><br>
+    <button type="button" id="add-variant">Add Variant</button><br><br>
 
-    <input type="submit" value="Update Book">
+    <button type="submit" name="action" value="update">Update Book</button>
 </form>
+
 <script>
     document.getElementById('add-variant').addEventListener('click', function () {
         const variantContainer = document.createElement('div');

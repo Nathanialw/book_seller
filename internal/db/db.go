@@ -306,21 +306,35 @@ func GetAllBooks() ([]models.Book, error) {
 	return books, rows.Err()
 }
 
-func DeleteBook(id int) error {
+func DeleteVariantEntries(id int) {
+	_, err := db.Exec(ctx, `DELETE FROM book_variants WHERE book_id = $1`, id)
+	if err != nil {
+		log.Printf("error deleting variants: %v\n", err)
+	}
+}
+
+func DeleteBookEntry(id int) {
+	_, err := db.Exec(ctx, `DELETE FROM books WHERE id = $1`, id)
+	if err != nil {
+		log.Printf("error deleting book: %v\n", err)
+	}
+}
+
+func DeleteVariantEntry(id int) {
+	_, err := db.Exec(ctx, `DELETE FROM book_variants WHERE id = $1`, id)
+	if err != nil {
+		log.Printf("error deleting variants: %v\n", err)
+	}
+}
+
+func DeleteBook(id int) {
 	// Before deleting the book:
 	// book, err := db.GetBookByID(bookID)
 	// if err == nil && book.ImagePath != "" {
 	// 	os.Remove("static/img/" + book.ImagePath)
 	// }
-	_, err := db.Exec(ctx, `DELETE FROM books WHERE id = $1`, id)
-	if err != nil {
-		log.Printf("error deleting book: %v\n", err)
-	}
-	_, err = db.Exec(ctx, `DELETE FROM book_variants WHERE book_id = $1`, id)
-	if err != nil {
-		log.Printf("error deleting variants: %v\n", err)
-	}
-	return err
+	DeleteBookEntry(id)
+	DeleteVariantEntries(id)
 }
 
 func InsertVariant(bookID int, color string, stock int, price float64, imagePath string) error {
