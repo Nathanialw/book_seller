@@ -160,52 +160,54 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// We need to ensure all arrays have the same length
 	if len(colors) != len(stocks) || len(colors) != len(imageFiles) {
-		http.Error(w, "Mismatch in variant data", http.StatusBadRequest)
-		return
-	}
+		println("Mismatch in variant data")
+	} else {
+		// Insert each variant using the InsertVariant function
+		for i := range colors {
+			color := colors[i]
+			stock, _ := strconv.Atoi(stocks[i])
+			imagePath := ""
 
-	// Insert each variant using the InsertVariant function
-	for i := range colors {
-		color := colors[i]
-		stock, _ := strconv.Atoi(stocks[i])
-		imagePath := ""
-
-		price, err := strconv.ParseFloat(prices[i], 64)
-		if err != nil {
-			http.Error(w, "Invalid price", http.StatusBadRequest)
-			return
-		}
-
-		// Override only if a new file was uploaded
-		if i < len(imageFiles) {
-			file, err := imageFiles[i].Open()
+			price, err := strconv.ParseFloat(prices[i], 64)
 			if err != nil {
-				log.Printf("Failed to open file %d: %v", i, err)
-			} else {
-				defer file.Close()
-				imagePath = imageFiles[i].Filename
-				savePath := "static/img/" + imagePath
+				http.Error(w, "Invalid price", http.StatusBadRequest)
+				return
+			}
 
-				dst, err := os.Create(savePath)
+			// Override only if a new file was uploaded
+			if i < len(imageFiles) {
+				file, err := imageFiles[i].Open()
 				if err != nil {
-					log.Printf("Failed to create file %d: %v", i, err)
+					log.Printf("Failed to open file %d: %v", i, err)
 				} else {
-					defer dst.Close()
-					_, err = io.Copy(dst, file)
+					defer file.Close()
+					imagePath = imageFiles[i].Filename
+					savePath := "static/img/" + imagePath
+
+					dst, err := os.Create(savePath)
 					if err != nil {
-						log.Printf("Failed to write file %d: %v", i, err)
+						log.Printf("Failed to create file %d: %v", i, err)
+					} else {
+						defer dst.Close()
+						_, err = io.Copy(dst, file)
+						if err != nil {
+							log.Printf("Failed to write file %d: %v", i, err)
+						}
 					}
 				}
 			}
+
+			// Insert the variant into the book_variants table
+			err = db.InsertVariant(bookID, color, stock, price, imagePath)
+			if err != nil {
+				http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
+				return
+			}
 		}
 
-		// Insert the variant into the book_variants table
-		err = db.InsertVariant(bookID, color, stock, price, imagePath)
-		if err != nil {
-			http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
-			return
-		}
 	}
+
+	cache.UpdateAuthors()
 
 	// Redirect back to the admin page after successful book and variant creation
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)

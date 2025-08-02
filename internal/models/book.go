@@ -7,6 +7,14 @@ type Book struct {
 	Description string
 
 	Variants []Variant
+}
+
+type Variant struct {
+	ID        int
+	Color     string
+	Stock     int
+	Price     float64
+	ImagePath string
 
 	// //size
 	// Pages  string
@@ -20,13 +28,4 @@ type Book struct {
 
 	// //process
 	// Binding string
-
-}
-
-type Variant struct {
-	ID        int
-	Color     string
-	Stock     int
-	Price     float64
-	ImagePath string
 }
