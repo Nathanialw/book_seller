@@ -15,9 +15,81 @@
     <label for="description">Description</label><br>
     <textarea id="description" name="description" rows="4" cols="40" required></textarea><br><br>
 
-    <label for="cover">Cover Image</label><br>
+    <label for="cover">Image</label><br>
     <input type="file" id="cover" name="cover" accept="image/*" required><br><br>
+
+    <!-- Variant Fields -->
+    <div id="variants-container">
+        <div class="variant">
+            <label for="color">Color</label><br>
+            <input type="text" name="color[]" required><br><br>
+
+            <label for="stock">Stock</label><br>
+            <input type="number" name="stock[]" min="0" required><br><br>
+
+            <label for="variant-image">Variant Image</label><br>
+            <input type="file" name="variant_image[]" accept="image/*" required><br><br>
+        </div>
+    </div>
+
+    <button type="button" id="add-variant">Add Another Variant</button><br><br>
 
     <input type="submit" value="Add Book">
 </form>
+
+<script>
+    document.getElementById('add-variant').addEventListener('click', function() {
+        // Create a new variant form group
+        var variantContainer = document.createElement('div');
+        variantContainer.classList.add('variant');
+
+        // Color field
+        var colorLabel = document.createElement('label');
+        colorLabel.setAttribute('for', 'color');
+        colorLabel.textContent = 'Color';
+        variantContainer.appendChild(colorLabel);
+
+        var colorInput = document.createElement('input');
+        colorInput.setAttribute('type', 'text');
+        colorInput.setAttribute('name', 'color[]');
+        colorInput.required = true;
+        variantContainer.appendChild(colorInput);
+
+        variantContainer.appendChild(document.createElement('br'));
+
+        // Stock field
+        var stockLabel = document.createElement('label');
+        stockLabel.setAttribute('for', 'stock');
+        stockLabel.textContent = 'Stock';
+        variantContainer.appendChild(stockLabel);
+
+        var stockInput = document.createElement('input');
+        stockInput.setAttribute('type', 'number');
+        stockInput.setAttribute('name', 'stock[]');
+        stockInput.setAttribute('min', '0');
+        stockInput.required = true;
+        variantContainer.appendChild(stockInput);
+
+        variantContainer.appendChild(document.createElement('br'));
+
+        // Variant Image field
+        var imageLabel = document.createElement('label');
+        imageLabel.setAttribute('for', 'variant-image');
+        imageLabel.textContent = 'Variant Image';
+        variantContainer.appendChild(imageLabel);
+
+        var imageInput = document.createElement('input');
+        imageInput.setAttribute('type', 'file');
+        imageInput.setAttribute('name', 'variant_image[]');
+        imageInput.setAttribute('accept', 'image/*');
+        imageInput.required = true;
+        variantContainer.appendChild(imageInput);
+
+        variantContainer.appendChild(document.createElement('br'));
+
+        // Append the new variant container to the variants section
+        document.getElementById('variants-container').appendChild(variantContainer);
+    });
+</script>
+
 {{ end }}

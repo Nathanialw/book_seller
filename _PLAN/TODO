@@ -6,7 +6,11 @@ WfnEOjGc0DqPYQFljizqSPpLsLdKZczEamoQ7BEaatctSEndQ2kmekYW0d
 g9Hx11MOUiy006jrs55W6"
 
 
+sudo -u postgres psql -d bookmaker
 
+@Login:
+adminUser = "admin"
+adminPass = "securepassword123"
 
 #make a script to collect static files as well
 go build -buildvcs=false -o deploy/main.exe ./cmd

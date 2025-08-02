@@ -4,21 +4,47 @@
 
 <table border="1" cellpadding="8">
     <tr>
-        <th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Description</th><th>Image</th><th>Edit</th><th>Delete</th>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Description</th>
+        <th>Variants</th>
+        <th>Edit</th>
+        <th>Delete</th>
     </tr>
+
     {{ range .Books }}
     <tr>
         <td>{{ .ID }}</td>
         <td>{{ .Title }}</td>
         <td>{{ .Author }}</td>
-        <td>${{ .Price }}</td>
         <td>{{ .Description }}</td>
         <td>
-            {{ if .Image }}
-                <img src="/static/img/{{ .Image }}" width="50">
-                <span></spanp>{{ .Image }}</span>
+            {{ if .Variants }}
+                <table border="0" cellpadding="4">
+                    <tr>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Color</th>
+                        <th>Image</th>
+                    </tr>
+                    {{ range .Variants }}
+                    <tr>
+                        <td>
+                            {{ if .ImagePath }}
+                                <img src="/static/img/{{ .ImagePath }}" width="50"><br>
+                            {{ else }}
+                                <em>No image</em>
+                            {{ end }}
+                        </td>
+                        <td>{{ .Color }}</td>
+                        <td>${{ .Price }}</td>
+                        <td>{{ .Stock }}</td>
+                    </tr>
+                    {{ end }}
+                </table>
             {{ else }}
-                No image
+                <em>No variants</em>
             {{ end }}
         </td>
         <td><a href="/admin/edit-book/{{ .ID }}">Edit</a></td>

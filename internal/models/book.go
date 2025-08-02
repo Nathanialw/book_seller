@@ -5,19 +5,28 @@ type Book struct {
 	Title       string
 	Author      string
 	Description string
-	Price       float64
-	Image       string
 
-	//size
-	Pages  string
-	Width  string
-	Height string
-	Length string
+	Variants []Variant
 
-	//materials
-	Cover string
-	Paper string
+	// //size
+	// Pages  string
+	// Width  string
+	// Height string
+	// Length string
 
-	//process
-	Binding string
+	// //materials
+	// Cover string
+	// Paper string
+
+	// //process
+	// Binding string
+
+}
+
+type Variant struct {
+	ID        int
+	Color     string
+	Stock     int
+	Price     float64
+	ImagePath string
 }

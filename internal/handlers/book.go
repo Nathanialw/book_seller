@@ -9,31 +9,40 @@ import (
 	"bookmaker.ca/internal/db"
 )
 
-//pass in the book_id of the book
 func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract bookID from the URL path
 	parts := strings.Split(r.URL.Path, "/")
 	bookID, err := strconv.Atoi(parts[len(parts)-1])
 
-	if err != nil || bookID <= 0 {
-		http.NotFound(w, r)
+	// Handle invalid bookID if needed
+	if err != nil {
+		http.Error(w, "Invalid Book ID", http.StatusBadRequest)
 		return
 	}
 
+	// Fetch the book details from the database
 	book, err := db.GetBookByID(bookID)
 	if err != nil {
-		http.NotFound(w, r)
+		http.Error(w, "Failed to retrieve book details", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles(
+	// Parse the template
+	tmpl, err := template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
 		"templates/book.html",
-	))
+	)
+	if err != nil {
+		http.Error(w, "Failed to parse template", http.StatusInternalServerError)
+		return
+	}
 
+	// Execute the template and send the response
 	if err := tmpl.Execute(w, book); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
 	}
 }
 

@@ -2,8 +2,6 @@
     {{range .}}
         <div>
             <h3><a href="book/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
-            <p>${{.Price}}</p>
-            <img src="{{.Image}}" width="100">            
         </div>
     {{end}}
 {{end}}

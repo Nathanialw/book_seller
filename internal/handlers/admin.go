@@ -130,24 +130,31 @@ func AddBookForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddBookHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(10 << 20) // max 10MB file
-	if err != nil {
-		http.Error(w, "Cannot parse form", http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
 		return
 	}
 
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+
+	// Get form values for the book
 	title := r.FormValue("title")
 	author := r.FormValue("author")
 	priceStr := r.FormValue("price")
 	description := r.FormValue("description")
 
+	// Convert price to float
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
 		http.Error(w, "Invalid price", http.StatusBadRequest)
 		return
 	}
 
-	// Handle file upload
+	// Handle cover image upload
 	file, header, err := r.FormFile("cover")
 	var imagePath string
 	if err == nil {
@@ -167,15 +174,64 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Insert book into database (with image path)
-	err = db.InsertBook(title, author, price, description, imagePath)
+	// Insert the book into the books table (no variants yet)
+	bookID, err := db.InsertBookReturningID(title, author, description)
 	if err != nil {
 		http.Error(w, "Failed to insert book", http.StatusInternalServerError)
 		return
 	}
 
-	cache.UpdateAuthors()
-	http.Redirect(w, r, "/admin/add-book", http.StatusSeeOther)
+	// Now process the variants
+	colors := r.Form["color[]"]                              // Array of colors
+	stocks := r.Form["stock[]"]                              // Array of stock values
+	variantImages := r.MultipartForm.File["variant_image[]"] // Array of variant images
+
+	// We need to ensure all arrays have the same length
+	if len(colors) != len(stocks) || len(colors) != len(variantImages) {
+		http.Error(w, "Mismatch in variant data", http.StatusBadRequest)
+		return
+	}
+
+	// Insert each variant using the InsertVariant function
+	for i := range colors {
+		color := colors[i]
+		stock, _ := strconv.Atoi(stocks[i])
+		variantImage := variantImages[i]
+
+		// Save the variant image
+		variantImagePath := ""
+		if variantImage != nil {
+			file, err := variantImage.Open()
+			if err != nil {
+				http.Error(w, "Failed to read variant image", http.StatusInternalServerError)
+				return
+			}
+			defer file.Close()
+
+			variantImagePath = fmt.Sprintf("static/img/%s", filepath.Base(variantImage.Filename))
+			out, err := os.Create(variantImagePath)
+			if err != nil {
+				http.Error(w, "Failed to save variant image", http.StatusInternalServerError)
+				return
+			}
+			defer out.Close()
+			_, err = io.Copy(out, file)
+			if err != nil {
+				http.Error(w, "Failed to save variant image", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		// Insert the variant into the book_variants table
+		err = db.InsertVariant(bookID, color, stock, price, variantImagePath)
+		if err != nil {
+			http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect back to the admin page after successful book and variant creation
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
 func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
@@ -207,6 +263,7 @@ func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedIn: true,
 		Book:     *book,
 	}
+
 	tmpl.Execute(w, d)
 }
 
@@ -217,36 +274,95 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get book details
 	id, _ := strconv.Atoi(r.FormValue("id"))
 	title := r.FormValue("title")
 	author := r.FormValue("author")
-	price, _ := strconv.ParseFloat(r.FormValue("price"), 64)
 	description := r.FormValue("description")
 
-	// Handle image
-	file, handler, err := r.FormFile("image")
-	var imagePath string
-	if err == nil {
-		defer file.Close()
-		imagePath = fmt.Sprintf("%s", handler.Filename)
-		dst, err := os.Create("static/img/" + imagePath)
-		if err == nil {
-			defer dst.Close()
-			io.Copy(dst, file)
+	// Handle variants (you may want to loop through variants from the form)
+	variantIds := r.Form["variant_id"]
+	colors := r.Form["color"]
+	stockValues := r.Form["stock"]
+	priceValues := r.Form["price"]
+	imageFiles := r.MultipartForm.File["variant_image"] // Handling multiple images for variants
+	existingImagePaths := r.Form["existing_image_path"]
+
+	println("num", len(colors))
+
+	for i := 0; i < len(colors); i++ {
+		println(author, i)
+		// Ensure all variant fields are populated
+		if len(colors) != len(stockValues) || len(colors) != len(priceValues) {
+			http.Error(w, "Variant fields mismatch", http.StatusBadRequest)
+			return
+		}
+
+		// Ensure we have all fields for each variant
+
+		variantID, _ := strconv.Atoi(variantIds[i])
+		color := colors[i]
+		stock, _ := strconv.Atoi(stockValues[i])
+		price, _ := strconv.ParseFloat(priceValues[i], 64)
+		// Default to existing image path from hidden field
+		imagePath := existingImagePaths[i]
+
+		// Override only if a new file was uploaded
+		if i < len(imageFiles) && imageFiles[i] != nil && imageFiles[i].Filename != "" {
+			file, err := imageFiles[i].Open()
+			if err != nil {
+				log.Printf("Failed to open file %d: %v", i, err)
+			} else {
+				defer file.Close()
+				imagePath = imageFiles[i].Filename
+				savePath := "static/img/" + imagePath
+
+				dst, err := os.Create(savePath)
+				if err != nil {
+					log.Printf("Failed to create file %d: %v", i, err)
+				} else {
+					defer dst.Close()
+					_, err = io.Copy(dst, file)
+					if err != nil {
+						log.Printf("Failed to write file %d: %v", i, err)
+					}
+				}
+			}
+		}
+
+		// Create a variant for each set of values
+		variant := models.Variant{
+			ID:        variantID,
+			Color:     color,
+			Stock:     stock,
+			Price:     price,
+			ImagePath: imagePath,
+		}
+		println("path", variant.ImagePath)
+
+		if variantIds[i] == "new" {
+			db.InsertVariant(id, variant.Color, variant.Stock, variant.Price, variant.ImagePath)
+		} else {
+			db.UpdateBookVariantByID(variant)
 		}
 	}
+	println("done")
 
-	err = db.UpdateBook(id, title, author, price, description, imagePath)
+	// Update book details and its variants
+	err = db.UpdateBookByID(id, title, author, description)
 	if err != nil {
 		http.Error(w, "Failed to update", http.StatusInternalServerError)
 		return
 	}
 
+	// Rebuild the cache or update any other necessary data
 	cache.UpdateAuthors()
+
+	// Redirect to the book detail page or list page after successful update
 	http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
 }
 
-func AllBooksHandler(w http.ResponseWriter, r *http.Request) {
+func EditAllBooksHandler(w http.ResponseWriter, r *http.Request) {
 	books, err := db.GetAllBooks()
 
 	if err != nil {
