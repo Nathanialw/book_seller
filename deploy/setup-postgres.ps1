@@ -5,7 +5,7 @@ $DB_USER = "bookuser"
 $DB_PASS = "securepassword"
 
 # PostgreSQL bin path (adjust if needed)
-$PG_BIN = "C:\Program Files\PostgreSQL\15\bin"
+$PG_BIN = "C:\Program Files\PostgreSQL\17\bin"
 $env:Path += ";$PG_BIN"
 
 # Function to check if PostgreSQL tools are available
@@ -66,20 +66,30 @@ CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
-    price NUMERIC(10, 2),
     description TEXT,
-    image_path TEXT NOT NULL,
     search tsvector GENERATED ALWAYS AS (
         to_tsvector('english', title || ' ' || author || ' ' || coalesce(description, ''))
     ) STORED
 );
 
+CREATE TABLE IF NOT EXISTS book_variants (
+    id SERIAL PRIMARY KEY,
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    color TEXT NOT NULL,
+    price NUMERIC(10, 2),
+    image_path TEXT NOT NULL,
+    stock INTEGER NOT NULL CHECK (stock >= 0)
+);
+
 CREATE INDEX IF NOT EXISTS idx_books_search ON books USING GIN(search);
+
 CREATE INDEX IF NOT EXISTS trgm_idx_title ON books USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS trgm_idx_author ON books USING GIN (author gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS trgm_idx_color ON book_variants USING GIN (color gin_trgm_ops);
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;
 GRANT USAGE, SELECT, UPDATE ON SEQUENCE books_id_seq TO $DB_USER;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE book_variants_id_seq TO $DB_USER;
 "@
 
 # Write the SQL to temp file and run it

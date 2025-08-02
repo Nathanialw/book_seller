@@ -57,7 +57,6 @@ CREATE TABLE IF NOT EXISTS books (
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     description TEXT,
-    image_path TEXT NOT NULL,
     search tsvector GENERATED ALWAYS AS (
         to_tsvector('english', title || ' ' || author || ' ' || coalesce(description, ''))
     ) STORED
@@ -68,6 +67,7 @@ CREATE TABLE IF NOT EXISTS book_variants (
     id SERIAL PRIMARY KEY,
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     color TEXT NOT NULL,
+    image_path TEXT NOT NULL,
     price NUMERIC(10, 2),
     stock INTEGER NOT NULL CHECK (stock >= 0)
 );
