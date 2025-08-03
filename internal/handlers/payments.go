@@ -61,7 +61,13 @@ func SuccessHandler(w http.ResponseWriter, r *http.Request) {
 	// 	{ID: 2, Title: "The Go Programming Language", Author: "Alan Donovan", Price: 34.99, Image: "/static/img/go2.jpg"},
 	// }
 
-	tmpl := template.Must(template.ParseFiles("templates/success.html"))
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/admin/header.html",
+		"templates/partials/footer.html",
+		"templates/success.html",
+	))
+
 	books := 0
 	tmpl.Execute(w, books)
 }

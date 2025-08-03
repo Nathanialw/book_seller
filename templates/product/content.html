@@ -23,6 +23,7 @@
                 <img src="/static/img/{{ .ImagePath }}" alt="Variant Image" width="100">
                 <form action="/checkout" method="POST">
                     <input type="hidden" name="id" value="{{$.ID}}">
+                    <button class="btn" type="submit">Add To Cart</button>
                     <button class="btn" type="submit">Buy</button>
                 </form>
             </div>

@@ -30,13 +30,19 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/videos", handlers.VideosHandler).Methods("GET")
 	r.HandleFunc("/blogs", handlers.BlogsHandler).Methods("GET")
 
+	//prodcuts
 	r.HandleFunc("/products", handlers.ProductListHandler).Methods("GET")
 	r.HandleFunc("/product/{id}", handlers.ProductDetailHandler).Methods("GET")
 	r.HandleFunc("/search", handlers.SearchHandler).Methods("GET")
 
+	//cart
+	r.HandleFunc("/cart", handlers.CartHandler).Methods("GET")
+	r.HandleFunc("/add-to-cart", handlers.AddToCartHandler).Methods("POST")
+	r.HandleFunc("/cart-checkout", handlers.CartCheckoutHandler).Methods("POST")
+
 	// Payment
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
-	r.HandleFunc("/SuccessHandler", handlers.SuccessHandler).Methods("POST")
+	r.HandleFunc("/success", handlers.SuccessHandler).Methods("POST")
 
 	// Admin
 	admin := r.PathPrefix("/admin").Subrouter()
