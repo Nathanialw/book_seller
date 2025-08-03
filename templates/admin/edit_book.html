@@ -1,3 +1,7 @@
+{{ define "title" }}
+    <link rel="stylesheet" href="/static/css/edit-book.css">
+{{ end }}
+
 {{ define "content" }}
 <h1>Edit Book</h1>
 <a href="/admin/edit-books">Back</a><br><br>
@@ -16,7 +20,7 @@
 
     <!-- Variant Fields -->
      <h3>Variants</h3>
-    <div id="variants-container">
+    <div id="variants-container" class="variants-container">
         {{ range $index, $variant := .Book.Variants }}
             <div class="variant">
                 <input type="text" name="variant_id" value="{{ $variant.ID }}" required hidden>
@@ -40,11 +44,14 @@
                 <input type="file" name="variant_image[{{ $index }}]">
 
                 <!-- Inside your main form -->
-                <button type="submit" name="action" value="remove_variant-{{ $variant.ID }}">Remove Variant</button>
+                <button class="remove-variant-btn" type="submit" name="action" value="remove_variant-{{ $variant.ID }}">Remove Variant</button>
             </div>
         {{ end }}
     </div>
-
+    
+    <br>
+    <br>
+    <br>
     <button type="button" id="add-variant">Add Variant</button><br><br>
 
     <button type="submit" name="action" value="update">Update Book</button>

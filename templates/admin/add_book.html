@@ -1,3 +1,7 @@
+{{ define "title" }}
+    <link rel="stylesheet" href="/static/css/edit-book.css">
+{{ end }}
+
 {{ define "content" }}
 <h1>Add a New Book</h1>
 <a href="/admin">Back</a><br><br>
@@ -13,7 +17,7 @@
     <textarea id="description" name="description" rows="4" cols="40" required></textarea><br><br>
     
     <!-- Variant Fields -->
-    <div id="variants-container">
+    <div id="variants-container" class="variants-container">
         <div class="variant">
             <label for="price">Price</label>
             <input type="text" id="price" name="price"><br>
@@ -26,11 +30,11 @@
 
             <label for="variant-image">Variant Image</label>
             <input type="file" name="variant_image" accept="image/*"><br><br>
+            <button type="button" class="remove-variant-btn" id="remove-variant">Remove Variant</button><br>
         </div>
     </div>
 
-    <button type="button" id="add-variant">Add Variant</button><br><br>
-    <button type="button" id="remove-variant">Remove Variant</button><br><br>
+    <button type="button" id="add-variant">Add Variant</button><br>
 
     <input type="submit" value="Add Book">
 </form>
