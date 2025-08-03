@@ -13,8 +13,8 @@ var (
 )
 
 // LoadAuthors queries the DB once and caches the result.
-func LoadAuthors() error {
-	gs, err := db.GetAuthors()
+func LoadCache() error {
+	gs, err := db.GetCache()
 	if err != nil {
 		return err
 	}
@@ -25,20 +25,20 @@ func LoadAuthors() error {
 	return nil
 }
 
-func GetAuthors() []string {
+func GetCache() []string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return authors
 }
 
-func UpdateAuthors() {
-	if err := updateAuthors(); err != nil {
+func UpdateCache() {
+	if err := updateCache(); err != nil {
 		log.Printf("Failed to update authors cache: %v", err)
 	}
 }
 
-func updateAuthors() error {
-	newAuthors, err := db.GetAuthors()
+func updateCache() error {
+	newAuthors, err := db.GetCache()
 	if err != nil {
 		return err
 	}

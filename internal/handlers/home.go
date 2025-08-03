@@ -25,7 +25,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/home.html",
 	))
 
-	authors := cache.GetAuthors() // This should return []string or []Author
+	authors := cache.GetCache() // This should return []string or []Author
 	loggedIn := loggedIn(r)
 
 	data := struct {

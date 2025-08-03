@@ -13,14 +13,14 @@ import (
 	"bookmaker.ca/internal/models"
 )
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
 		return
 	}
 
-	// Get book details
+	// Get product details
 	id, _ := strconv.Atoi(r.FormValue("id"))
 	title := r.FormValue("title")
 	author := r.FormValue("author")
@@ -81,17 +81,17 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		if variantIds[i] == "new" {
 			db.InsertVariant(id, variant.Color, variant.Stock, variant.Price, variant.ImagePath)
 		} else {
-			db.UpdateBookVariantByID(variant)
+			db.UpdateProductVariantByID(variant)
 		}
 	}
 
-	// Update book details and its variants
-	err = db.UpdateBookByID(id, title, author, description)
+	// Update product details and its variants
+	err = db.UpdateProductByID(id, title, author, description)
 	if err != nil {
 		http.Error(w, "Failed to update", http.StatusInternalServerError)
 		return
 	}
 
 	// Rebuild the cache or update any other necessary data
-	cache.UpdateAuthors()
+	cache.UpdateCache()
 }

@@ -1,12 +1,12 @@
 {{ define "title" }}
-    <link rel="stylesheet" href="/static/css/edit-book.css">
+    <link rel="stylesheet" href="/static/css/edit-product.css">
 {{ end }}
 
 {{ define "content" }}
-<h1>Add a New Book</h1>
+<h1>Add a New product</h1>
 <a href="/admin">Back</a><br><br>
 
-<form action="/admin/add-book" method="POST" enctype="multipart/form-data" style="max-width: 400px; margin-top: 20px;">
+<form action="/admin/add-product" method="POST" enctype="multipart/form-data" style="max-width: 400px; margin-top: 20px;">
     <label for="title">Title</label><br>
     <input type="text" id="title" name="title" required><br><br>
 
@@ -36,7 +36,7 @@
 
     <button type="button" id="add-variant">Add Variant</button><br>
 
-    <input type="submit" value="Add Book">
+    <input type="submit" value="Add Product">
 </form>
 
 <script>

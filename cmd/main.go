@@ -11,7 +11,7 @@ import (
 
 func main() {
 	db.InitDB()
-	if err := cache.LoadAuthors(); err != nil {
+	if err := cache.LoadCache(); err != nil {
 		log.Fatalf("Failed to load genres: %v", err)
 	}
 

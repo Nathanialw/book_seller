@@ -1,5 +1,5 @@
 {{ define "content" }}
-<h1>All Books</h1>
+<h1>All Product</h1>
 <a href="/admin">Back</a><br><br>
 
 <table border="1" cellpadding="8">
@@ -13,7 +13,7 @@
         <th>Delete</th>
     </tr>
 
-    {{ range .Books }}
+    {{ range .Product }}
     <tr>
         <td>{{ .ID }}</td>
         <td>{{ .Title }}</td>
@@ -47,8 +47,8 @@
                 <em>No variants</em>
             {{ end }}
         </td>
-        <td><a href="/admin/edit-book/{{ .ID }}">Edit</a></td>
-        <td><a href="/admin/delete-book/{{ .ID }}">Delete</a></td>
+        <td><a href="/admin/edit-product/{{ .ID }}">Edit</a></td>
+        <td><a href="/admin/delete-product/{{ .ID }}">Delete</a></td>
     </tr>
     {{ end }}
 </table>

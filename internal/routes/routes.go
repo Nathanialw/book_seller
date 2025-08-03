@@ -30,8 +30,8 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/videos", handlers.VideosHandler).Methods("GET")
 	r.HandleFunc("/blogs", handlers.BlogsHandler).Methods("GET")
 
-	r.HandleFunc("/books", handlers.BookListHandler).Methods("GET")
-	r.HandleFunc("/book/{id}", handlers.BookDetailHandler).Methods("GET")
+	r.HandleFunc("/products", handlers.ProductListHandler).Methods("GET")
+	r.HandleFunc("/product/{id}", handlers.ProductDetailHandler).Methods("GET")
 	r.HandleFunc("/search", handlers.SearchHandler).Methods("GET")
 
 	// Payment
@@ -46,12 +46,12 @@ func SetupRoutes() *mux.Router {
 	admin.HandleFunc("/blogs", RequireAuth(handlers.AdminBlogHandler)).Methods("GET")
 	admin.HandleFunc("/videos", RequireAuth(handlers.AdminVideosHandler)).Methods("GET")
 	admin.HandleFunc("", RequireAuth(handlers.AdminHandler)).Methods("GET")
-	admin.HandleFunc("/add-book", RequireAuth(handlers.AddBookForm)).Methods("GET")
-	admin.HandleFunc("/add-book", RequireAuth(handlers.AddBookHandler)).Methods("POST")
-	admin.HandleFunc("/update-book", RequireAuth(handlers.UpdateBookHandler)).Methods("POST")
-	admin.HandleFunc("/edit-books", RequireAuth(handlers.EditAllBooksHandler)).Methods("GET")
-	admin.HandleFunc("/edit-book/{id}", RequireAuth(handlers.EditBookFormHandler)).Methods("GET")
-	admin.HandleFunc("/delete-book/{id}", RequireAuth(handlers.DeleteBookFormHandler)).Methods("GET")
+	admin.HandleFunc("/add-product", RequireAuth(handlers.AddProductForm)).Methods("GET")
+	admin.HandleFunc("/add-product", RequireAuth(handlers.AddProductHandler)).Methods("POST")
+	admin.HandleFunc("/update-product", RequireAuth(handlers.UpdateProductHandler)).Methods("POST")
+	admin.HandleFunc("/edit-products", RequireAuth(handlers.EditAllProductssHandler)).Methods("GET")
+	admin.HandleFunc("/edit-product/{id}", RequireAuth(handlers.EditProductFormHandler)).Methods("GET")
+	admin.HandleFunc("/delete-product/{id}", RequireAuth(handlers.DeleteProductFormHandler)).Methods("GET")
 
 	return r
 }

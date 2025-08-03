@@ -20,15 +20,15 @@ func InitDB() {
 	}
 }
 
-// InsertBook inserts a new book row into the books table.
-func InsertBook(title, author, description string, variants []models.Variant) error {
-	// First, insert into the books table
+// InsertBook inserts a new product row into the products table.
+func InsertProduct(title, author, description string, variants []models.Variant) error {
+	// First, insert into the products table
 	sql := `
 		INSERT INTO books (title, author, description)
 		VALUES ($1, $2, $3) RETURNING id
 	`
-	var bookID int
-	err := db.QueryRow(ctx, sql, title, author, description).Scan(&bookID)
+	var productID int
+	err := db.QueryRow(ctx, sql, title, author, description).Scan(&productID)
 	if err != nil {
 		log.Printf("Failed to insert book: %v\n", err)
 		return err
@@ -40,17 +40,17 @@ func InsertBook(title, author, description string, variants []models.Variant) er
 			INSERT INTO book_variants (book_id, color, stock, price, image_path)
 			VALUES ($1, $2, $3, $4, $5)
 		`
-		_, err := db.Exec(ctx, sqlVariant, bookID, v.Color, v.Stock, v.Price, v.ImagePath)
+		_, err := db.Exec(ctx, sqlVariant, productID, v.Color, v.Stock, v.Price, v.ImagePath)
 		if err != nil {
 			log.Printf("Failed to insert variant: %v\n", err)
 			return err
 		}
 	}
-	log.Printf("Inserted book: %s by %s with %d variants\n", title, author, len(variants))
+	log.Printf("Inserted product: %s by %s with %d variants\n", title, author, len(variants))
 	return nil
 }
 
-func SearchBooks(query string) ([]models.Book, error) {
+func SearchProducts(query string) ([]models.Product, error) {
 	rows, err := db.Query(ctx, `
         SELECT id, title, author
         FROM books
@@ -63,27 +63,27 @@ func SearchBooks(query string) ([]models.Book, error) {
 	}
 	defer rows.Close()
 
-	var books []models.Book
+	var products []models.Product
 	for rows.Next() {
-		var b models.Book
+		var b models.Product
 		if err := rows.Scan(&b.ID, &b.Title, &b.Author); err != nil {
 			continue
 		}
-		books = append(books, b)
+		products = append(products, b)
 	}
-	return books, rows.Err()
+	return products, rows.Err()
 }
 
-// Function to get variants by book ID
-func GetVariantsByBookID(bookID int) ([]models.Variant, error) {
+// Function to get variants by product ID
+func GetVariantsByProductID(productID int) ([]models.Variant, error) {
 	var variants []models.Variant
 
-	// Query for variants associated with the book
+	// Query for variants associated with the product
 	rows, err := db.Query(context.Background(), `
 		SELECT id, color, stock, price, image_path
 		FROM book_variants
 		WHERE book_id = $1
-	`, bookID)
+	`, productID)
 	if err != nil {
 		// Handle error if variants can't be fetched
 		return nil, fmt.Errorf("error fetching variants: %v", err)
@@ -104,36 +104,35 @@ func GetVariantsByBookID(bookID int) ([]models.Variant, error) {
 	return variants, nil
 }
 
-// GetBookByID now calls GetVariantsByBookID
-func GetBookByID(id int) (*models.Book, error) {
-	// Initialize book
-	var b models.Book
+func GetProductByID(id int) (*models.Product, error) {
+	// Initialize product
+	var b models.Product
 
-	// Query for book details
+	// Query for product details
 	err := db.QueryRow(context.Background(), `
 		SELECT id, title, author, description
 		FROM books
 		WHERE id = $1
 	`, id).Scan(&b.ID, &b.Title, &b.Author, &b.Description)
 	if err != nil {
-		// Handle error if book is not found
-		return nil, fmt.Errorf("error fetching book: %v", err)
+		// Handle error if product is not found
+		return nil, fmt.Errorf("error fetching product: %v", err)
 	}
 
 	// Get variants using the separate function
-	variants, err := GetVariantsByBookID(id)
+	variants, err := GetVariantsByProductID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Assign the variants to the book
+	// Assign the variants to the product
 	b.Variants = variants
 
-	// Return the book with variants
+	// Return the product with variants
 	return &b, nil
 }
 
-func GetAuthors() ([]string, error) {
+func GetCache() ([]string, error) {
 	rows, err := db.Query(ctx, `
         SELECT DISTINCT author
         FROM books
@@ -161,37 +160,37 @@ func GetAuthors() ([]string, error) {
 	return authors, nil
 }
 
-func UpdateBookAndVariants(id int, title, author, desc string, variants []models.Variant) error {
-	// Update the book information
-	queryBook := `
+func UpdateProductAndVariants(id int, title, author, desc string, variants []models.Variant) error {
+	// Update the product information
+	queryProductID := `
 		UPDATE books 
 		SET title=$1, author=$2, description=$3
 		WHERE id=$4
 	`
-	_, err := db.Exec(ctx, queryBook, title, author, desc, id)
+	_, err := db.Exec(ctx, queryProductID, title, author, desc, id)
 	if err != nil {
-		log.Printf("Failed to update book info: %v\n", err)
+		log.Printf("Failed to update product info: %v\n", err)
 		return err
 	}
 
 	// Delegate variant update to separate function
-	err = UpdateBookVariants(id, variants)
+	err = UpdateProductVariants(id, variants)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Updated book %d with %d variants\n", id, len(variants))
+	log.Printf("Updated product %d with %d variants\n", id, len(variants))
 	return nil
 }
 
-func UpdateBookVariants(bookID int, variants []models.Variant) error {
+func UpdateProductVariants(productID int, variants []models.Variant) error {
 	for _, variant := range variants {
 		queryVariant := `
 			UPDATE book_variants
 			SET color=$1, stock=$2, price=$3, image_path=$4
 			WHERE book_id=$5 AND color=$1
 		`
-		_, err := db.Exec(ctx, queryVariant, variant.Color, variant.Stock, variant.Price, variant.ImagePath, bookID)
+		_, err := db.Exec(ctx, queryVariant, variant.Color, variant.Stock, variant.Price, variant.ImagePath, productID)
 		if err != nil {
 			log.Printf("Failed to update variant (color: %s): %v\n", variant.Color, err)
 			return err
@@ -200,23 +199,23 @@ func UpdateBookVariants(bookID int, variants []models.Variant) error {
 	return nil
 }
 
-func UpdateBookByID(id int, title, author, desc string) error {
-	// Update the book information
-	queryBook := `
+func UpdateProductByID(id int, title, author, desc string) error {
+	// Update the product information
+	queryProduct := `
 		UPDATE books 
 		SET title=$1, author=$2, description=$3
 		WHERE id=$4
 	`
-	_, err := db.Exec(ctx, queryBook, title, author, desc, id)
+	_, err := db.Exec(ctx, queryProduct, title, author, desc, id)
 	if err != nil {
-		log.Printf("Failed to update book info: %v\n", err)
+		log.Printf("Failed to update product info: %v\n", err)
 		return err
 	}
 
 	return nil
 }
 
-func UpdateBookVariantByID(variant models.Variant) error {
+func UpdateProductVariantByID(variant models.Variant) error {
 	query := `
 		UPDATE book_variants
 		SET color = $1, stock = $2, price = $3, image_path = $4
@@ -230,8 +229,8 @@ func UpdateBookVariantByID(variant models.Variant) error {
 	return nil
 }
 
-func GetAllBooks() ([]models.Book, error) {
-	// Query to join books with book_variants
+func GetAllProducts() ([]models.Product, error) {
+	// Query to join product with book_variants
 	rows, err := db.Query(context.Background(), `
 		SELECT b.id, b.title, b.author, b.description, 
 		       v.color, v.stock, v.price, v.image_path
@@ -244,12 +243,12 @@ func GetAllBooks() ([]models.Book, error) {
 	}
 	defer rows.Close()
 
-	var books []models.Book
-	var currentBook *models.Book
+	var products []models.Product
+	var currentProduct *models.Product
 
 	// Iterate through query results
 	for rows.Next() {
-		var b models.Book
+		var b models.Product
 		var v models.Variant
 
 		// Use pointers for nullable fields
@@ -266,16 +265,16 @@ func GetAllBooks() ([]models.Book, error) {
 			return nil, err
 		}
 
-		// Check if we need to create a new book or if we're still processing the same book
-		if currentBook == nil || currentBook.ID != b.ID {
-			// Add the previous book to the list, if any
-			if currentBook != nil {
-				books = append(books, *currentBook)
+		// Check if we need to create a new product or if we're still processing the same product
+		if currentProduct == nil || currentProduct.ID != b.ID {
+			// Add the previous product to the list, if any
+			if currentProduct != nil {
+				products = append(products, *currentProduct)
 			}
 
-			// Create a new book and set it as current
-			currentBook = &b
-			currentBook.Variants = []models.Variant{} // Initialize the variants array
+			// Create a new product and set it as current
+			currentProduct = &b
+			currentProduct.Variants = []models.Variant{} // Initialize the variants array
 		}
 
 		// Only append the variant if it's not NULL (i.e., a valid variant)
@@ -292,18 +291,22 @@ func GetAllBooks() ([]models.Book, error) {
 			v.ImagePath = *imagePath
 		}
 
-		// Append the variant to the book's variants array if it's valid
+		// Append the variant to the product's variants array if it's valid
 		if v.Color != "" {
-			currentBook.Variants = append(currentBook.Variants, v)
+			currentProduct.Variants = append(currentProduct.Variants, v)
 		}
 	}
 
-	// Add the last book to the list
-	if currentBook != nil {
-		books = append(books, *currentBook)
+	// Add the last product to the list
+	if currentProduct != nil {
+		products = append(products, *currentProduct)
 	}
 
-	return books, rows.Err()
+	// for i := 0; i < len(products); i++ {
+	// 	println(products[i].Title)
+	// }
+
+	return products, rows.Err()
 }
 
 func DeleteVariantEntries(id int) {
@@ -313,7 +316,7 @@ func DeleteVariantEntries(id int) {
 	}
 }
 
-func DeleteBookEntry(id int) {
+func DeleteProductEntry(id int) {
 	_, err := db.Exec(ctx, `DELETE FROM books WHERE id = $1`, id)
 	if err != nil {
 		log.Printf("error deleting book: %v\n", err)
@@ -327,28 +330,28 @@ func DeleteVariantEntry(id int) {
 	}
 }
 
-func DeleteBook(id int) {
-	// Before deleting the book:
-	// book, err := db.GetBookByID(bookID)
-	// if err == nil && book.ImagePath != "" {
-	// 	os.Remove("static/img/" + book.ImagePath)
+func DeleteProduct(id int) {
+	// Before deleting the product:
+	// product, err := db.GetProductByID(productID)
+	// if err == nil && product.ImagePath != "" {
+	// 	os.Remove("static/img/" + product.ImagePath)
 	// }
-	DeleteBookEntry(id)
+	DeleteProductEntry(id)
 	DeleteVariantEntries(id)
 }
 
-func InsertVariant(bookID int, color string, stock int, price float64, imagePath string) error {
+func InsertVariant(productID int, color string, stock int, price float64, imagePath string) error {
 	_, err := db.Exec(ctx, `
 		INSERT INTO book_variants (book_id, color, stock, price, image_path)
 		VALUES ($1, $2, $3, $4, $5)
-	`, bookID, color, stock, price, imagePath)
+	`, productID, color, stock, price, imagePath)
 	if err != nil {
 		log.Printf("InsertVariant error: %v\n", err)
 	}
 	return err
 }
 
-func InsertBookReturningID(title, author, description string) (int, error) {
+func InsertProductReturningID(title, author, description string) (int, error) {
 	var id int
 	sql := `
 		INSERT INTO books (title, author, description)

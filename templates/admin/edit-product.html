@@ -1,27 +1,27 @@
 {{ define "title" }}
-    <link rel="stylesheet" href="/static/css/edit-book.css">
+    <link rel="stylesheet" href="/static/css/edit-product.css">
 {{ end }}
 
 {{ define "content" }}
-<h1>Edit Book</h1>
-<a href="/admin/edit-books">Back</a><br><br>
+<h1>Edit Product</h1>
+<a href="/admin/edit-products">Back</a><br><br>
 
-<form action="/admin/update-book" method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="id" value="{{ .Book.ID }}">
+<form action="/admin/update-product" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="id" value="{{ .Product.ID }}">
     
     <label>Title:</label><br>
-    <input type="text" name="title" value="{{ .Book.Title }}" required><br><br>
+    <input type="text" name="title" value="{{ .Product.Title }}" required><br><br>
 
     <label>Author:</label><br>
-    <input type="text" name="author" value="{{ .Book.Author }}" required><br><br>
+    <input type="text" name="author" value="{{ .Product.Author }}" required><br><br>
 
     <label>Description:</label><br>
-    <textarea name="description" required>{{ .Book.Description }}</textarea><br><br>
+    <textarea name="description" required>{{ .Product.Description }}</textarea><br><br>
 
     <!-- Variant Fields -->
      <h3>Variants</h3>
     <div id="variants-container" class="variants-container">
-        {{ range $index, $variant := .Book.Variants }}
+        {{ range $index, $variant := .Product.Variants }}
             <div class="variant">
                 <input type="text" name="variant_id" value="{{ $variant.ID }}" required hidden>
                 <label>Price:</label>
@@ -54,7 +54,7 @@
     <br>
     <button type="button" id="add-variant">Add Variant</button><br><br>
 
-    <button type="submit" name="action" value="update">Update Book</button>
+    <button type="submit" name="action" value="update">Update Product</button>
 </form>
 
 <script>

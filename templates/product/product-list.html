@@ -1,11 +1,11 @@
 {{ define "title" }}
-    <title>book list</title>
+    <title>product list</title>
 {{ end }}
 
 {{define "content"}}
     {{range .}}
         <div>
-            <h3><a href="book/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
+            <h3><a href="product/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
         </div>
     {{end}}
 {{end}}

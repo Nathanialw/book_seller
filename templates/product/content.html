@@ -1,0 +1,34 @@
+{{ define "title" }}
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/css/edit-product.css">
+{{ end }}
+
+{{ define "content" }}
+    <h1>Product</h1>
+    <h3>{{.Title}} by {{.Author}}</h3>
+    <p>{{.Description}}</p>
+
+    {{block "content-custom" .}}{{end}}
+    
+    {{ if .Variants }}
+        <div id="variants-container" class="variants-container">
+        {{ range .Variants }}
+            <div class="variant">
+                <p>${{.Price}}</p>
+                <p>{{.Stock}}</p>
+                <p>{{.Color}}</p>
+
+                {{block "variant-custom" .}}{{end}}
+                
+                <img src="/static/img/{{ .ImagePath }}" alt="Variant Image" width="100">
+                <form action="/checkout" method="POST">
+                    <input type="hidden" name="id" value="{{$.ID}}">
+                    <button class="btn" type="submit">Buy</button>
+                </form>
+            </div>
+        {{ end }}
+        </div>
+    {{ else }}
+        <p>No variants found</p>
+    {{ end }}
+{{ end }}

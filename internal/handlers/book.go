@@ -9,21 +9,21 @@ import (
 	"bookmaker.ca/internal/db"
 )
 
-func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract bookID from the URL path
+func ProductDetailHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract productID from the URL path
 	parts := strings.Split(r.URL.Path, "/")
-	bookID, err := strconv.Atoi(parts[len(parts)-1])
+	productID, err := strconv.Atoi(parts[len(parts)-1])
 
-	// Handle invalid bookID if needed
+	// Handle invalid productID if needed
 	if err != nil {
-		http.Error(w, "Invalid Book ID", http.StatusBadRequest)
+		http.Error(w, "Invalid Product ID", http.StatusBadRequest)
 		return
 	}
 
-	// Fetch the book details from the database
-	book, err := db.GetBookByID(bookID)
+	// Fetch the products details from the database
+	product, err := db.GetProductByID(productID)
 	if err != nil {
-		http.Error(w, "Failed to retrieve book details", http.StatusInternalServerError)
+		http.Error(w, "Failed to retrieve Product details", http.StatusInternalServerError)
 		return
 	}
 
@@ -32,9 +32,9 @@ func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/product.html",
-		"templates/variant-custom.html",
-		"templates/book.html",
+		"templates//product/content.html",
+		"templates//product/variant-custom.html",
+		"templates//product/content-custom.html",
 	)
 	if err != nil {
 		http.Error(w, "Failed to parse template", http.StatusInternalServerError)
@@ -42,16 +42,16 @@ func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Execute the template and send the response
-	if err := tmpl.Execute(w, book); err != nil {
+	if err := tmpl.Execute(w, product); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		return
 	}
 }
 
-func BookListHandler(w http.ResponseWriter, r *http.Request) {
-	books, err := db.GetAllBooks()
+func ProductListHandler(w http.ResponseWriter, r *http.Request) {
+	products, err := db.GetAllProducts()
 	if err != nil {
-		http.Error(w, "Failed to load books", http.StatusInternalServerError)
+		http.Error(w, "Failed to load products", http.StatusInternalServerError)
 		return
 	}
 
@@ -59,10 +59,10 @@ func BookListHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/booklist.html",
+		"templates/product/product-list.html",
 	))
 
-	if err := tmpl.Execute(w, books); err != nil {
+	if err := tmpl.Execute(w, products); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 }

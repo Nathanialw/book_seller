@@ -112,12 +112,12 @@ func AdminVideosHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, d)
 }
 
-func AddBookForm(w http.ResponseWriter, r *http.Request) {
+func AddProductForm(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/admin/header.html",
 		"templates/partials/footer.html",
-		"templates/admin/add_book.html",
+		"templates/admin/add-product.html",
 	))
 
 	d := struct {
@@ -128,7 +128,7 @@ func AddBookForm(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, d)
 }
 
-func AddBookHandler(w http.ResponseWriter, r *http.Request) {
+func AddProductHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/admin", http.StatusSeeOther)
 		return
@@ -140,15 +140,15 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get form values for the book
+	// Get form values for the product
 	title := r.FormValue("title")
 	author := r.FormValue("author")
 	description := r.FormValue("description")
 
-	// Insert the book into the books table (no variants yet)
-	bookID, err := db.InsertBookReturningID(title, author, description)
+	// Insert the product into the products table (no variants yet)
+	productID, err := db.InsertProductReturningID(title, author, description)
 	if err != nil {
-		http.Error(w, "Failed to insert book", http.StatusInternalServerError)
+		http.Error(w, "Failed to insert product", http.StatusInternalServerError)
 		return
 	}
 
@@ -198,7 +198,7 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Insert the variant into the book_variants table
-			err = db.InsertVariant(bookID, color, stock, price, imagePath)
+			err = db.InsertVariant(productID, color, stock, price, imagePath)
 			if err != nil {
 				http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
 				return
@@ -207,24 +207,24 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	cache.UpdateAuthors()
+	cache.UpdateCache()
 
-	// Redirect back to the admin page after successful book and variant creation
+	// Redirect back to the admin page after successful product and variant creation
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
-func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/admin/edit-book/")
-	bookID, err := strconv.Atoi(idStr)
+func EditProductFormHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/admin/edit-product/")
+	productID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
-	book, err := db.GetBookByID(bookID)
+	product, err := db.GetProductByID(productID)
 
 	if err != nil {
-		http.Error(w, "Book not found", http.StatusNotFound)
+		http.Error(w, "product not found", http.StatusNotFound)
 		return
 	}
 
@@ -232,44 +232,46 @@ func EditBookFormHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/admin/header.html",
 		"templates/partials/footer.html",
-		"templates/admin/edit_book.html",
+		"templates/admin/edit-product.html",
 	))
 
 	d := struct {
 		LoggedIn bool
-		Book     models.Book
+		Product  models.Product
 	}{
 		LoggedIn: true,
-		Book:     *book,
+		Product:  *product,
 	}
 
 	tmpl.Execute(w, d)
 }
 
-func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
 	idStr := r.FormValue("id")
 
 	switch {
 	case action == "update":
 		println("update...")
-		admin.UpdateBook(w, r)
-		http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
+		admin.UpdateProduct(w, r)
+		http.Redirect(w, r, "/admin/edit-products", http.StatusSeeOther)
 	case strings.HasPrefix(action, "remove_variant-"):
 		println("remove variant...")
 		variantIDStr := strings.TrimPrefix(action, "remove_variant-")
 		DeleteVariantFormHandler(w, r, variantIDStr)
-		http.Redirect(w, r, "/admin/edit-book/"+idStr, http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/edit-product/"+idStr, http.StatusSeeOther)
 	default:
 		http.Error(w, "Unknown action", http.StatusBadRequest)
 	}
 }
 
-func EditAllBooksHandler(w http.ResponseWriter, r *http.Request) {
-	books, err := db.GetAllBooks()
+func EditAllProductssHandler(w http.ResponseWriter, r *http.Request) {
+	products, err := db.GetAllProducts()
+
+	println(`asds`, len(products))
 
 	if err != nil {
-		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch products", http.StatusInternalServerError)
 		return
 	}
 
@@ -277,32 +279,32 @@ func EditAllBooksHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/admin/header.html",
 		"templates/partials/footer.html",
-		"templates/admin/edit_books.html",
+		"templates/admin/edit-products.html",
 	))
 
 	d := struct {
 		LoggedIn bool
-		Books    []models.Book
+		Product  []models.Product
 	}{
 		LoggedIn: true,
-		Books:    books,
+		Product:  products,
 	}
 	tmpl.Execute(w, d)
 }
 
-func DeleteBookFormHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/admin/delete-book/")
-	bookID, err := strconv.Atoi(idStr)
+func DeleteProductFormHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/admin/delete-product/")
+	productID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
-	db.DeleteBook(bookID)
+	db.DeleteProduct(productID)
 
-	log.Printf("Deleted book with ID %d", bookID)
-	cache.UpdateAuthors()
-	http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
+	log.Printf("Deleted product with ID %d", productID)
+	cache.UpdateCache()
+	http.Redirect(w, r, "/admin/edit-products", http.StatusSeeOther)
 }
 
 func DeleteVariantFormHandler(w http.ResponseWriter, r *http.Request, variantIDStr string) {
