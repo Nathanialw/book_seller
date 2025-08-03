@@ -10,30 +10,34 @@ import (
 )
 
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	returnURL := r.FormValue("id")
+
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
-	returnURL := r.FormValue("id")
-	//TODO: //use the ID to get the value of the book
+	//TODO: //use the ID to get the values of the book
+	name := "The Go Programming Language Book"
+	currency := "usd"
+	var quantity int64 = 1
 	var amount int64 = 3499
 
 	if returnURL == "" {
 		returnURL = "404" // default fallback
 	}
-	returnURL = "http://127.0.0.1:6600/book/" + returnURL
+	returnURL = "http://127.0.0.1:6600/product/" + returnURL
 
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String("usd"),
+					Currency: stripe.String(currency),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String("The Go Programming Language Book"),
+						Name: stripe.String(name),
 					},
 					UnitAmount: stripe.Int64(amount),
 				},
-				Quantity: stripe.Int64(1),
+				Quantity: stripe.Int64(quantity),
 			},
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
