@@ -17,31 +17,30 @@
     <!-- Variant Fields -->
      <h3>Variants</h3>
     <div id="variants-container">
-        {{ range .Book.Variants }}
+        {{ range $index, $variant := .Book.Variants }}
             <div class="variant">
-                <input type="text" name="variant_id" value="{{ .ID }}" required hidden>
+                <input type="text" name="variant_id" value="{{ $variant.ID }}" required hidden>
                 <label>Price:</label>
-                <input type="text" name="price" value="{{ .Price }}" required><br>
+                <input type="text" name="price" value="{{ $variant.Price }}" required><br>
 
                 <label>Color:</label>
-                <input type="text" name="color" value="{{ .Color }}" required><br>
+                <input type="text" name="color" value="{{ $variant.Color }}" required><br>
 
                 <label>Stock:</label>
-                <input type="text" name="stock" value="{{ .Stock }}" required><br>
+                <input type="text" name="stock" value="{{ $variant.Stock }}" required><br>
 
                 <br>
-                <label>Current Image: {{ .ImagePath }}</label>
-                <input type="hidden" name="existing_image_path" value="{{ .ImagePath }}">
+                <label>Current Image: {{ $variant.ImagePath }}</label>
+                <input type="hidden" name="existing_image_path" value="{{ $variant.ImagePath }}">
                 <br>
-                <img src="/static/img/{{ .ImagePath }}" value="{{ .ImagePath }}" alt="variant-image" width="100px">
+                <img src="/static/img/{{ .ImagePath }}" value="{{ $variant.ImagePath }}" alt="variant-image" width="100px">
                 <br>
                 
                 <label>Change Image:</label>
-                <input type="file" name="variant_image"><br><br>
+                <input type="file" name="variant_image[{{ $index }}]">
 
                 <!-- Inside your main form -->
-                 <input type="hidden" name="variant_id" value="{{ .ID }}">
-                <button type="submit" name="action" value="remove_variant">Remove Variant</button>
+                <button type="submit" name="action" value="remove_variant-{{ $variant.ID }}">Remove Variant</button>
             </div>
         {{ end }}
     </div>
@@ -52,6 +51,8 @@
 </form>
 
 <script>
+    let variantCount = document.querySelectorAll('.variant').length; // Start with current count
+
     document.getElementById('add-variant').addEventListener('click', function () {
         const variantContainer = document.createElement('div');
         variantContainer.classList.add('variant');
@@ -60,7 +61,7 @@
         const idInput = document.createElement('input');
         idInput.setAttribute('type', 'hidden');
         idInput.setAttribute('name', 'variant_id');
-        idInput.value = 'new'; // Backend can treat 0 as "new"
+        idInput.value = 'new';
         variantContainer.appendChild(idInput);
 
         // Hidden existing_image_path (none for new)
@@ -117,7 +118,7 @@
 
         const imageInput = document.createElement('input');
         imageInput.type = 'file';
-        imageInput.name = 'variant_image';
+        imageInput.name = `variant_image[${variantCount}]`; // 👈 Dynamic index here
         imageInput.accept = 'image/*';
         variantContainer.appendChild(imageInput);
 
@@ -126,8 +127,11 @@
 
         // Append new variant block
         document.getElementById('variants-container').appendChild(variantContainer);
+
+        variantCount++; // Increment for next added variant
     });
 </script>
+
 
 
 {{ end }}

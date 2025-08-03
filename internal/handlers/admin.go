@@ -250,17 +250,19 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
 	idStr := r.FormValue("id")
 
-	switch action {
-	case "update":
+	switch {
+	case action == "update":
 		println("update...")
 		admin.UpdateBook(w, r)
 		http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
-	case "remove_variant":
+	case strings.HasPrefix(action, "remove_variant-"):
 		println("remove variant...")
-		DeleteVariantFormHandler(w, r)
+		variantIDStr := strings.TrimPrefix(action, "remove_variant-")
+		DeleteVariantFormHandler(w, r, variantIDStr)
 		http.Redirect(w, r, "/admin/edit-book/"+idStr, http.StatusSeeOther)
+	default:
+		http.Error(w, "Unknown action", http.StatusBadRequest)
 	}
-
 }
 
 func EditAllBooksHandler(w http.ResponseWriter, r *http.Request) {
@@ -303,8 +305,7 @@ func DeleteBookFormHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/edit-books", http.StatusSeeOther)
 }
 
-func DeleteVariantFormHandler(w http.ResponseWriter, r *http.Request) {
-	variantIDStr := r.FormValue("variant_id")
+func DeleteVariantFormHandler(w http.ResponseWriter, r *http.Request, variantIDStr string) {
 	variantID, err := strconv.Atoi(variantIDStr)
 	if err != nil {
 		http.Error(w, "Invalid variant ID", http.StatusBadRequest)

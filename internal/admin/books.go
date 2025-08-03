@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -30,10 +31,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	colors := r.Form["color"]
 	stockValues := r.Form["stock"]
 	priceValues := r.Form["price"]
-	imageFiles := r.MultipartForm.File["variant_image"] // Handling multiple images for variants
 	existingImagePaths := r.Form["existing_image_path"]
-
-	println("updating book")
 
 	for i := 0; i < len(colors); i++ {
 		// Ensure all variant fields are populated
@@ -51,27 +49,24 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		// Default to existing image path from hidden field
 		imagePath := existingImagePaths[i]
 
-		// Override only if a new file was uploaded
-		if i < len(imageFiles) && imageFiles[i] != nil && imageFiles[i].Filename != "" {
-			file, err := imageFiles[i].Open()
-			if err != nil {
-				log.Printf("Failed to open file %d: %v", i, err)
-			} else {
-				defer file.Close()
-				imagePath = imageFiles[i].Filename
-				savePath := "static/img/" + imagePath
+		file, handler, err := r.FormFile(fmt.Sprintf("variant_image[%d]", i))
+		if err == nil {
+			defer file.Close()
+			imagePath = handler.Filename
+			savePath := "static/img/" + imagePath
 
-				dst, err := os.Create(savePath)
+			dst, err := os.Create(savePath)
+			if err != nil {
+				log.Printf("Failed to create file for variant %d: %v", i, err)
+			} else {
+				defer dst.Close()
+				_, err = io.Copy(dst, file)
 				if err != nil {
-					log.Printf("Failed to create file %d: %v", i, err)
-				} else {
-					defer dst.Close()
-					_, err = io.Copy(dst, file)
-					if err != nil {
-						log.Printf("Failed to write file %d: %v", i, err)
-					}
+					log.Printf("Failed to save image for variant %d: %v", i, err)
 				}
 			}
+		} else {
+			// No file uploaded, keep existing imagePath
 		}
 
 		// Create a variant for each set of values
