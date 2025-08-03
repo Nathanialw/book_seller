@@ -32,6 +32,8 @@ func BookDetailHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
+		"templates/product.html",
+		"templates/variant-custom.html",
 		"templates/book.html",
 	)
 	if err != nil {
