@@ -50,3 +50,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) models.Cart {
 
 	return data
 }
+
+func ClearCart() {
+
+}

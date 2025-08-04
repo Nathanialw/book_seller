@@ -63,11 +63,6 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/product/cart.html",
 	))
 
-	println("ids:")
-	for i := 0; i < len(products); i++ {
-		println("id", products[i].Variant.ID)
-	}
-
 	data := models.Cart{
 		Products: products,
 		Subtotal: subtotal,

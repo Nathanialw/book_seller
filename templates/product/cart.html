@@ -29,7 +29,8 @@
 
     <br>
     
-    <form action="/cart-checkout" method="post">
-        <button class="btn">Checkout</button>
+    <form action="/cart-checkout" method="POST">
+        <input type="hidden" name="id" value="/">
+        <button class="btn" type="submit">Checkout</button>
     </form>
 {{ end }}

@@ -12,6 +12,7 @@ import (
 
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	returnURL := r.FormValue("id")
+	println(returnURL)
 
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
@@ -22,9 +23,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	var quantity int64 = 1
 	var amount int64 = 3499
 	//TODO: links for images within the site
-	var images = []string{
-		"https://nathanial.ca/assets/images/default.png",
-	}
+	image := "https://nathanial.ca/assets/images/default.png"
 
 	if returnURL == "" {
 		returnURL = "404" // default fallback
@@ -39,7 +38,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 					Currency: stripe.String(currency),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name:   stripe.String(name),
-						Images: stripe.StringSlice(images),
+						Images: stripe.StringSlice([]string{image}),
 					},
 					UnitAmount: stripe.Int64(amount),
 				},
@@ -62,46 +61,34 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
-	returnURL := r.FormValue("id")
-	cart := cart.CheckoutHandler(w, r)
+	cartItems := cart.CheckoutHandler(w, r)
 
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
-	//TODO: //Get values from the cart
-	name := "The Go Programming Language Book"
-	currency := "CAD"
-	var quantity int64 = 1
-	var amount int64 = int64(cart.Subtotal * 100)
-	//TODO: links for images within the site
-	var images = []string{
-		"https://nathanial.ca/assets/images/default.png",
-	}
+	var lineItems []*stripe.CheckoutSessionLineItemParams
 
-	if returnURL == "" {
-		returnURL = "404" // default fallback
+	for _, item := range cartItems.Products {
+		amount := int64(item.Variant.Price * 100) // Stripe expects amount in cents
+		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
+			PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+				Currency: stripe.String("CAD"),
+				ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+					Name:   stripe.String(item.Variant.Color),
+					Images: stripe.StringSlice([]string{item.Variant.ImagePath}),
+				},
+				UnitAmount: stripe.Int64(amount),
+			},
+			Quantity: stripe.Int64(int64(item.Quantity)),
+		})
 	}
-	returnURL = "http://127.0.0.1:6600/product/" + returnURL
 
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{
-				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String(currency),
-					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name:   stripe.String(name),
-						Images: stripe.StringSlice(images),
-					},
-					UnitAmount: stripe.Int64(amount),
-				},
-				Quantity: stripe.Int64(quantity),
-			},
-		},
-		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
-		//TODO: Use real pages with full URLs
-		SuccessURL: stripe.String("http://127.0.0.1:6600/success"),
-		CancelURL:  stripe.String(returnURL),
+		LineItems:          lineItems,
+		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
+		SuccessURL:         stripe.String("http://127.0.0.1:6600/success"),
+		CancelURL:          stripe.String("http://127.0.0.1:6600/cart"),
 	}
 
 	s, err := session.New(params)
@@ -109,6 +96,8 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	cart.ClearCart()
 
 	http.Redirect(w, r, s.URL, http.StatusSeeOther)
 }
