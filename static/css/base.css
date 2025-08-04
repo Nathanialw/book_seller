@@ -10,4 +10,15 @@ img {
     color: wheat;
     background-color: purple;
     width: 100px;
+    
+}
+
+.btn:hover {
+    background-color: lightcoral;
+}
+
+.add-remove-btn {
+    width: 20px;
+    height: 20px;
+    margin: auto 2px;
 }

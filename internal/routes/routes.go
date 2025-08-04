@@ -38,7 +38,7 @@ func SetupRoutes() *mux.Router {
 	//cart
 	r.HandleFunc("/cart", handlers.CartHandler).Methods("GET")
 	r.HandleFunc("/add-to-cart", handlers.AddToCartHandler).Methods("POST")
-	r.HandleFunc("/cart-checkout", handlers.CartCheckoutHandler).Methods("POST")
+	r.HandleFunc("/cart-checkout", handlers.CheckoutHandler).Methods("POST")
 
 	// Payment
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")

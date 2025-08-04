@@ -66,39 +66,3 @@ func ProductListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 }
-
-func CartHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles(
-		"templates/layout.html",
-		"templates/partials/header.html",
-		"templates/partials/footer.html",
-		"templates/product/cart.html",
-	))
-
-	products := 0
-
-	if err := tmpl.Execute(w, products); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
-	}
-}
-
-func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func CartCheckoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	//TODO:
-	//grab the form valkues of the cart
-	//forward them to the stripe checkout
-
-	tmpl := template.Must(template.ParseFiles(
-		"templates/product/cart-checkout.html",
-	))
-
-	products := 0
-
-	if err := tmpl.Execute(w, products); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
-	}
-}

@@ -20,12 +20,22 @@
 
                 {{block "variant-custom" .}}{{end}}
                 
-                <img src="/static/img/{{ .ImagePath }}" alt="Variant Image" width="100">
-                <form action="/checkout" method="POST">
-                    <input type="hidden" name="id" value="{{$.ID}}">
-                    <button class="btn" type="submit">Add To Cart</button>
-                    <button class="btn" type="submit">Buy</button>
-                </form>
+                {{ if .ImagePath }}
+                    <img src="/static/img/{{ .ImagePath }}" alt="Variant Image" width="100">
+                {{ else }}
+                    <img src="/static/img/default.png" alt="Default Image" width="100">
+                {{ end }}
+         
+                <div style="display: flex; justify-content: space-around;">
+                    <form action="/add-to-cart" method="POST">
+                        <input type="hidden" name="id" value="{{.ID}}">
+                        <button class="btn" type="submit">Add To Cart</button>
+                    </form>
+                    <form action="/checkout" method="POST">
+                        <input type="hidden" name="id" value="{{$.ID}}">
+                        <button class="btn" type="submit">Buy</button>
+                    </form>
+                </div>
             </div>
         {{ end }}
         </div>

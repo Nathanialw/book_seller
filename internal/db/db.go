@@ -74,6 +74,22 @@ func SearchProducts(query string) ([]models.Product, error) {
 	return products, rows.Err()
 }
 
+func GetVariantByID(variantID int) (models.Variant, error) {
+	var v models.Variant
+
+	err := db.QueryRow(context.Background(), `
+		SELECT id, color, stock, price, image_path
+		FROM book_variants
+		WHERE id = $1
+	`, variantID).Scan(&v.ID, &v.Color, &v.Stock, &v.Price, &v.ImagePath)
+
+	if err != nil {
+		return models.Variant{}, fmt.Errorf("error fetching variant: %v", err)
+	}
+
+	return v, nil
+}
+
 // Function to get variants by product ID
 func GetVariantsByProductID(productID int) ([]models.Variant, error) {
 	var variants []models.Variant

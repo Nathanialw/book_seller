@@ -1,7 +1,28 @@
 {{ define "content" }}
-    <p>Cart</p>
+    <h1>Cart</h1>
+    
+    <div style="display: flex;">
+    {{ range .Products }}
+        <div style="margin-right: 20px; background-color: lightblue; padding: 20px;">
+            <img src="/static/img/{{ .Variant.ImagePath }}" alt="" srcset="">
 
+            <p>Quantity: {{ .Quantity }}</p>
+            <div style="display: flex;">
+                <p>Price: ${{ printf "%.2f" .Total }} </p>
+                <button class="btn add-remove-btn">+</button>
+                <button class="btn add-remove-btn">-</button >
+            </div>
+            <button class="btn">Remove</button>
+        </div>
+    {{ end }}
+    </div>
+    <p>Total: ${{ printf "%.2f" .Total }}</p> 
+    <p>GST: ${{ printf "%.2f" .Tax }}</p> 
+    <p>Total: ${{ printf "%.2f" .Subtotal }}</p> 
+
+    <br>
+    
     <form action="/cart-checkout" method="post">
-        <button>Checkout</button>
+        <button class="btn">Checkout</button>
     </form>
 {{ end }}
