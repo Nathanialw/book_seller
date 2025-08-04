@@ -1,0 +1,17 @@
+{{ define "title" }}
+    <title>Orders</title>
+{{ end }}
+
+{{ define "content" }}
+    <h1>Orders</h1>
+
+    <p>Find Order</p>
+    <form action="search-order" method="post">
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="">
+        <label for="order-number">Order Number:</label>
+        <input type="number" name="order-number" id="">
+
+        <button type="submit" class="btn">Search</button>
+    </form>
+{{ end }}
