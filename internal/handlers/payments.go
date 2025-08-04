@@ -15,7 +15,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
-	//TODO: //use the ID to get the values of the book
+	//TODO: //Get values from the cart
 	name := "The Go Programming Language Book"
 	currency := "usd"
 	var quantity int64 = 1

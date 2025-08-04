@@ -9,10 +9,17 @@
             <p>Quantity: {{ .Quantity }}</p>
             <div style="display: flex;">
                 <p>Price: ${{ printf "%.2f" .Total }} </p>
-                <button class="btn add-remove-btn">+</button>
-                <button class="btn add-remove-btn">-</button >
+
+                <form action="increment-item" method="POST">
+                    <button name="increment" type="submit" class="btn add-remove-btn" value="{{ .Variant.ID }}">+</button>
+                </form>
+                <form action="decrement-item" method="POST">
+                    <button name="decrement" type="submit" class="btn add-remove-btn" value="{{ .Variant.ID }}">-</button >
+                </form>
             </div>
-            <button class="btn">Remove</button>
+            <form action="remove-item" method="POST">
+                <button name="remove-item" type="submit" class="btn" value="{{ .Variant.ID }}">Remove</button>
+            </form>
         </div>
     {{ end }}
     </div>
