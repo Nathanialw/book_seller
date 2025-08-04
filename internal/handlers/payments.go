@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"bookmaker.ca/internal/cart"
 	"github.com/stripe/stripe-go/v74"
 	"github.com/stripe/stripe-go/v74/checkout/session"
 )
@@ -20,6 +21,10 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	currency := "usd"
 	var quantity int64 = 1
 	var amount int64 = 3499
+	//TODO: links for images within the site
+	var images = []string{
+		"https://nathanial.ca/assets/images/default.png",
+	}
 
 	if returnURL == "" {
 		returnURL = "404" // default fallback
@@ -33,7 +38,60 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 					Currency: stripe.String(currency),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String(name),
+						Name:   stripe.String(name),
+						Images: stripe.StringSlice(images),
+					},
+					UnitAmount: stripe.Int64(amount),
+				},
+				Quantity: stripe.Int64(quantity),
+			},
+		},
+		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+		//TODO: Use real pages with full URLs
+		SuccessURL: stripe.String("http://127.0.0.1:6600/success"),
+		CancelURL:  stripe.String(returnURL),
+	}
+
+	s, err := session.New(params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, s.URL, http.StatusSeeOther)
+}
+
+func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	returnURL := r.FormValue("id")
+	cart := cart.CheckoutHandler(w, r)
+
+	//TODO: set the Key as an env variable on the server
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+	//TODO: //Get values from the cart
+	name := "The Go Programming Language Book"
+	currency := "CAD"
+	var quantity int64 = 1
+	var amount int64 = int64(cart.Subtotal * 100)
+	//TODO: links for images within the site
+	var images = []string{
+		"https://nathanial.ca/assets/images/default.png",
+	}
+
+	if returnURL == "" {
+		returnURL = "404" // default fallback
+	}
+	returnURL = "http://127.0.0.1:6600/product/" + returnURL
+
+	params := &stripe.CheckoutSessionParams{
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency: stripe.String(currency),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name:   stripe.String(name),
+						Images: stripe.StringSlice(images),
 					},
 					UnitAmount: stripe.Int64(amount),
 				},
@@ -63,7 +121,7 @@ func SuccessHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
-		"templates/admin/header.html",
+		"templates/partials/header.html",
 		"templates/partials/footer.html",
 		"templates/success.html",
 	))

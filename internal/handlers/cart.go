@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"html/template"
-	"math"
 	"net/http"
 	"strconv"
 
+	"bookmaker.ca/internal/cart"
 	"bookmaker.ca/internal/db"
 	"bookmaker.ca/internal/models"
 )
@@ -51,45 +51,10 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/cart", http.StatusSeeOther)
 }
 
-type CartItems struct {
-	Variant  models.Variant
-	Quantity int
-	Total    float64
-}
-
-func getCartItems(r *http.Request) ([]CartItems, float64) {
-	session, _ := db.Store.Get(r, "session")
-	cartAny := session.Values["cart"]
-	cart, _ := cartAny.([]models.CartItem)
-
-	var total float64
-	var products []CartItems
-	for _, item := range cart {
-		variant, err := db.GetVariantByID(item.VariantID)
-		if err == nil {
-			products = append(products, CartItems{
-				Variant:  variant,
-				Quantity: item.Quantity,
-				Total:    variant.Price * float64(item.Quantity),
-			})
-			total += variant.Price * float64(item.Quantity)
-		}
-	}
-	return products, total
-}
-
-func calcTax(total float64) (float64, float64) {
-	const GST = 0.05
-	tax := math.Round(total*GST*100) / 100
-	subtotal := total + tax
-
-	return subtotal, tax
-}
-
 func CartHandler(w http.ResponseWriter, r *http.Request) {
 
-	products, total := getCartItems(r)
-	subtotal, tax := calcTax(total)
+	products, total := cart.GetCartItems(r)
+	subtotal, tax := cart.CalcTax(total)
 
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
@@ -98,12 +63,12 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/product/cart.html",
 	))
 
-	data := struct {
-		Products []CartItems
-		Subtotal float64
-		Tax      float64
-		Total    float64
-	}{
+	println("ids:")
+	for i := 0; i < len(products); i++ {
+		println("id", products[i].Variant.ID)
+	}
+
+	data := models.Cart{
 		Products: products,
 		Subtotal: subtotal,
 		Tax:      tax,
@@ -113,10 +78,6 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
-}
-
-func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
-	// add up cart
 }
 
 func IncrementItemHandler(w http.ResponseWriter, r *http.Request) {

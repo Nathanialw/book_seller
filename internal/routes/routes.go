@@ -38,14 +38,14 @@ func SetupRoutes() *mux.Router {
 	//cart
 	r.HandleFunc("/cart", handlers.CartHandler).Methods("GET")
 	r.HandleFunc("/add-to-cart", handlers.AddToCartHandler).Methods("POST")
-	r.HandleFunc("/cart-checkout", handlers.CheckoutHandler).Methods("POST")
 	r.HandleFunc("/increment-item", handlers.IncrementItemHandler).Methods("POST")
 	r.HandleFunc("/decrement-item", handlers.DecrementItemHandler).Methods("POST")
 	r.HandleFunc("/remove-item", handlers.RemoveItemHandler).Methods("POST")
 
 	// Payment
+	r.HandleFunc("/cart-checkout", handlers.CreateCartCheckoutSession).Methods("POST")
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
-	r.HandleFunc("/success", handlers.SuccessHandler).Methods("POST")
+	r.HandleFunc("/success", handlers.SuccessHandler).Methods("GET")
 
 	// Admin
 	admin := r.PathPrefix("/admin").Subrouter()
