@@ -8,7 +8,7 @@
     
     <!-- go to page of books returning a list of found -->
     <h2>Search DB</h2> 
-    <form action="/search" method="GET">
+    <form action="/search-products" method="GET">
         <input type="text" name="q" id="search" placeholder="Enter search term">
         <button type="submit">Submit</button>
     </form>
@@ -18,7 +18,7 @@
     <ul>
     {{ range .Authors }}
         <!-- Later update the href to point to author's page or search -->
-        <li><a href="/search?q={{ . }}">{{ . }}</a></li>
+        <li><a href="/search-products?q={{ . }}">{{ . }}</a></li>
     {{ end }}
     </ul>
     <br>

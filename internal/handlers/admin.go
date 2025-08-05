@@ -268,8 +268,6 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 func EditAllProductssHandler(w http.ResponseWriter, r *http.Request) {
 	products, err := db.GetAllProducts()
 
-	println(`asds`, len(products))
-
 	if err != nil {
 		http.Error(w, "Failed to fetch products", http.StatusInternalServerError)
 		return

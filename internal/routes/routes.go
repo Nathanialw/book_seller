@@ -29,12 +29,15 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/about", handlers.AboutHandler).Methods("GET")
 	r.HandleFunc("/videos", handlers.VideosHandler).Methods("GET")
 	r.HandleFunc("/blogs", handlers.BlogsHandler).Methods("GET")
+
+	// Orders
 	r.HandleFunc("/orders", handlers.OrdersHandler).Methods("GET")
+	r.HandleFunc("/search-orders", handlers.SearchOrdersHandler).Methods("GET")
 
 	// Products
 	r.HandleFunc("/products", handlers.ProductListHandler).Methods("GET")
 	r.HandleFunc("/product/{id}", handlers.ProductDetailHandler).Methods("GET")
-	r.HandleFunc("/search", handlers.SearchHandler).Methods("GET")
+	r.HandleFunc("/search-products", handlers.SearchProductsHandler).Methods("GET")
 
 	// Cart
 	r.HandleFunc("/cart", handlers.CartHandler).Methods("GET")

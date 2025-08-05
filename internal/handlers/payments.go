@@ -12,7 +12,6 @@ import (
 
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	returnURL := r.FormValue("id")
-	println(returnURL)
 
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
@@ -97,6 +96,8 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO:
+	// insert order into the orders db
 	cart.ClearCart()
 
 	http.Redirect(w, r, s.URL, http.StatusSeeOther)
