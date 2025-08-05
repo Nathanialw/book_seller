@@ -50,7 +50,7 @@ func SearchOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/search-results.html",
+		"templates/order/order-results.html",
 	))
 
 	tmpl.Execute(w, results)

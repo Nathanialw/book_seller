@@ -5,6 +5,8 @@
 
 export STRIPE_SECRET_KEY=""
 
+export STRIPE_WEBHOOK_SECRET=whsec_r0GWLTEK7q30FGpbvS9gjDcdge5T7tQq
+
 export STRIPE_SECRET_KEY="
 sk_test_51Rqloa2NPGaRjqznMlW
 WfnEOjGc0DqPYQFljizqSPpLsLdKZczEamoQ7BEaatctSEndQ2kmekYW0d

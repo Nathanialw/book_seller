@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"bookmaker.ca/internal/cart"
+	"bookmaker.ca/internal/core"
 	"bookmaker.ca/internal/db"
 	"bookmaker.ca/internal/models"
 )
@@ -53,8 +53,8 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 func CartHandler(w http.ResponseWriter, r *http.Request) {
 
-	products, total := cart.GetCartItems(r)
-	subtotal, tax := cart.CalcTax(total)
+	products, total := core.GetCartItems(r)
+	subtotal, tax := core.CalcTax(total)
 
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",

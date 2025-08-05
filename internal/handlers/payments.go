@@ -1,13 +1,18 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
 
-	"bookmaker.ca/internal/cart"
-	"github.com/stripe/stripe-go/v74"
-	"github.com/stripe/stripe-go/v74/checkout/session"
+	"io/ioutil"
+
+	"bookmaker.ca/internal/core"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/checkout/session"
+	"github.com/stripe/stripe-go/v82/webhook"
 )
 
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +34,13 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	}
 	returnURL = "http://127.0.0.1:6600/product/" + returnURL
 
+	orderID := core.GenerateShortOrderID()
+
 	params := &stripe.CheckoutSessionParams{
+		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
+			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}), // or any countries you want
+		},
+
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
@@ -46,8 +57,10 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 		//TODO: Use real pages with full URLs
-		SuccessURL: stripe.String("http://127.0.0.1:6600/success"),
-		CancelURL:  stripe.String(returnURL),
+		Metadata:         map[string]string{"order_id": orderID},
+		SuccessURL:       stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:        stripe.String(returnURL),
+		CustomerCreation: stripe.String("always"),
 	}
 
 	s, err := session.New(params)
@@ -60,7 +73,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
-	cartItems := cart.CheckoutHandler(w, r)
+	cartItems := core.CheckoutHandler(w, r)
 
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
@@ -82,12 +95,19 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	orderID := core.GenerateShortOrderID()
+
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		Metadata:           map[string]string{"order_id": orderID},
 		LineItems:          lineItems,
-		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:         stripe.String("http://127.0.0.1:6600/success"),
-		CancelURL:          stripe.String("http://127.0.0.1:6600/cart"),
+		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
+			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}),
+		},
+		Mode:             stripe.String(string(stripe.CheckoutSessionModePayment)),
+		SuccessURL:       stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:        stripe.String("http://127.0.0.1:6600/cart"),
+		CustomerCreation: stripe.String("always"),
 	}
 
 	s, err := session.New(params)
@@ -96,11 +116,67 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO:
-	// insert order into the orders db
-	cart.ClearCart()
-
 	http.Redirect(w, r, s.URL, http.StatusSeeOther)
+}
+
+func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("🔔 Webhook received")
+
+	const MaxBodyBytes = int64(65536)
+	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Request too large", http.StatusRequestEntityTooLarge)
+		return
+	}
+
+	endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
+	event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
+	if err != nil {
+		fmt.Println("❌ Signature verification failed:", err)
+		http.Error(w, "Invalid signature", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("Event Type:", event.Type)
+
+	if event.Type == "checkout.session.completed" {
+		var session stripe.CheckoutSession
+		err := json.Unmarshal(event.Data.Raw, &session)
+		if err != nil {
+			http.Error(w, "Failed to parse webhook", http.StatusBadRequest)
+			return
+		}
+
+		if session.CollectedInformation.ShippingDetails != nil {
+			address := session.CollectedInformation.ShippingDetails.Address
+			name := session.CollectedInformation.ShippingDetails.Name
+
+			fmt.Println("📦 Shipping to:", name)
+			fmt.Println("📍 Address:", address.Line1, address.City, address.PostalCode, address.Country)
+
+			// Use this info to store in your DB:
+			core.SaveShippingAddress(name, address.Line1, address.City, address.PostalCode, address.Country)
+
+		}
+
+		email := session.CustomerDetails.Email
+		fmt.Println("📧 Email:", email)
+
+		order_id := session.Metadata["order_id"]
+
+		// TODO: Match session.ID or customer ID to user/cart
+		core.CreateOrder(order_id)
+		// and then clear the cart or mark order as paid
+		core.ClearCart()
+
+		core.EmailOrderDetails(email)
+
+		fmt.Println("✅ Payment successful for session:", session.ID)
+		// e.g., cart.ClearCart(userID) or update order status in DB
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func SuccessHandler(w http.ResponseWriter, r *http.Request) {

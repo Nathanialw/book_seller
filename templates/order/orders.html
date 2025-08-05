@@ -6,11 +6,11 @@
     <h1>Orders</h1>
 
     <p>Find Order</p>
-    <form action="search-order" method="post">
+    <form action="search-orders" method="GET">
         <label for="email">Email:</label>
-        <input type="email" name="email" id="">
+        <input type="email" name="email" id="" required>
         <label for="order-number">Order Number:</label>
-        <input type="number" name="order-number" id="">
+        <input type="number" name="order-number" id="" required>
 
         <button type="submit" class="btn">Search</button>
     </form>

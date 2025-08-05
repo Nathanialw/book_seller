@@ -1,4 +1,4 @@
-package cart
+package core
 
 import (
 	"math"
@@ -51,6 +51,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) models.Cart {
 	return data
 }
 
+// TODO:
 func ClearCart() {
-
+	println("clearing cart")
 }

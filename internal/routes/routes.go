@@ -50,6 +50,7 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/cart-checkout", handlers.CreateCartCheckoutSession).Methods("POST")
 	r.HandleFunc("/checkout", handlers.CreateCheckoutSession).Methods("POST")
 	r.HandleFunc("/success", handlers.SuccessHandler).Methods("GET")
+	r.HandleFunc("/webhook", handlers.StripeWebhookHandler).Methods("POST", "GET")
 
 	// Admin
 	admin := r.PathPrefix("/admin").Subrouter()

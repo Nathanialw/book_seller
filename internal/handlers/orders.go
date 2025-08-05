@@ -11,7 +11,7 @@ func OrdersHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/layout.html",
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
-		"templates/orders.html",
+		"templates/order/orders.html",
 	))
 
 	data := 0
