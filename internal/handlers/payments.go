@@ -9,7 +9,7 @@ import (
 
 	"io/ioutil"
 
-	"bookmaker.ca/internal/core"
+	"bookmaker.ca/internal/services"
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/webhook"
@@ -34,7 +34,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	}
 	returnURL = "http://127.0.0.1:6600/product/" + returnURL
 
-	orderID := core.GenerateShortOrderID()
+	orderID := services.GenerateShortOrderID()
 
 	params := &stripe.CheckoutSessionParams{
 		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
@@ -73,7 +73,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
-	cartItems := core.CheckoutHandler(w, r)
+	cartItems := services.CheckoutHandler(w, r)
 
 	//TODO: set the Key as an env variable on the server
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
@@ -95,7 +95,7 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	orderID := core.GenerateShortOrderID()
+	orderID := services.GenerateShortOrderID()
 
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
@@ -156,7 +156,7 @@ func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("📍 Address:", address.Line1, address.City, address.PostalCode, address.Country)
 
 			// Use this info to store in your DB:
-			core.SaveShippingAddress(name, address.Line1, address.City, address.PostalCode, address.Country)
+			services.SaveShippingAddress(name, address.Line1, address.City, address.PostalCode, address.Country)
 
 		}
 
@@ -166,11 +166,11 @@ func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		order_id := session.Metadata["order_id"]
 
 		// TODO: Match session.ID or customer ID to user/cart
-		core.CreateOrder(order_id)
+		services.CreateOrder(order_id)
 		// and then clear the cart or mark order as paid
-		core.ClearCart()
+		services.ClearCart()
 
-		core.EmailOrderDetails(email)
+		services.EmailOrderDetails(email)
 
 		fmt.Println("✅ Payment successful for session:", session.ID)
 		// e.g., cart.ClearCart(userID) or update order status in DB

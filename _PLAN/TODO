@@ -3,6 +3,21 @@
 
 
 
+1
+Download the Stripe CLI and log in with your Stripe account
+$
+stripe login
+2
+Forward events to your destination
+$
+stripe listen --forward-to localhost:4242/webhook
+3
+Trigger events with the CLI
+$
+stripe trigger payment_intent.succeeded
+
+
+
 export STRIPE_SECRET_KEY=""
 
 export STRIPE_WEBHOOK_SECRET=whsec_r0GWLTEK7q30FGpbvS9gjDcdge5T7tQq
