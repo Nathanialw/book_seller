@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
+	"strconv"
 
-	"io/ioutil"
-
+	"bookmaker.ca/internal/models"
 	"bookmaker.ca/internal/services"
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
+	sessionpkg "github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
@@ -23,6 +25,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 
 	//TODO: //Get values from the cart
 	name := "The Go Programming Language Book"
+	color := "red"
 	var quantity int64 = 1
 	var amount int64 = 3499
 	//TODO: links for images within the site
@@ -33,48 +36,21 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	}
 	returnURL = "http://127.0.0.1:6600/product/" + returnURL
 
-	orderID := services.GenerateShortOrderID()
-
-	params := &stripe.CheckoutSessionParams{
-		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
-			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}),
-		},
-		ShippingOptions: []*stripe.CheckoutSessionShippingOptionParams{
-			{
-				ShippingRateData: &stripe.CheckoutSessionShippingOptionShippingRateDataParams{
-					DisplayName: stripe.String("Standard Shipping"),
-					Type:        stripe.String("fixed_amount"),
-					FixedAmount: &stripe.CheckoutSessionShippingOptionShippingRateDataFixedAmountParams{
-						Amount:   stripe.Int64(1500), // in cents
-						Currency: stripe.String("cad"),
-					},
-				},
+	var lineItems []*stripe.CheckoutSessionLineItemParams
+	lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
+		PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency: stripe.String("CAD"),
+			ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+				Name:        stripe.String(name),
+				Images:      stripe.StringSlice([]string{image}),
+				Description: stripe.String(fmt.Sprintf("Variant ID: %s", color)),
 			},
+			UnitAmount: stripe.Int64(amount),
 		},
+		Quantity: stripe.Int64(quantity),
+	})
 
-		AllowPromotionCodes: stripe.Bool(true),
-
-		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{
-				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String("CAD"),
-					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name:   stripe.String(name),
-						Images: stripe.StringSlice([]string{image}),
-					},
-					UnitAmount: stripe.Int64(amount),
-				},
-				Quantity: stripe.Int64(quantity),
-			},
-		},
-		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
-		//TODO: Use real pages with full URLs
-		Metadata:         map[string]string{"order_id": orderID},
-		SuccessURL:       stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
-		CancelURL:        stripe.String(returnURL),
-		CustomerCreation: stripe.String("always"),
-	}
+	params := params(lineItems, returnURL)
 
 	s, err := session.New(params)
 	if err != nil {
@@ -94,15 +70,20 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	var lineItems []*stripe.CheckoutSessionLineItemParams
 
 	for _, item := range cartItems.Products {
-		amount := int64(item.Variant.Cents)                         // Stripe expects amount in cents
+		amount := int64(item.Variant.Cents) // Stripe expects amount in cents
+		// TODO: needs the web address of the image asset
 		imgPath := "https://nathanial.ca/assets/images/default.png" // + item.Variant.ImagePath
 
 		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
 			PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 				Currency: stripe.String("CAD"),
 				ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-					Name:   stripe.String(item.Variant.Color),
-					Images: stripe.StringSlice([]string{imgPath}),
+					Name:        stripe.String(item.Name),
+					Images:      stripe.StringSlice([]string{imgPath}),
+					Description: stripe.String(fmt.Sprintf("Variant: %s", item.Variant.Color)),
+					Metadata: map[string]string{
+						"variant_id": fmt.Sprintf("%d", item.Variant.ID),
+					},
 				},
 				UnitAmount: stripe.Int64(amount),
 			},
@@ -110,7 +91,19 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	orderID := services.GenerateShortOrderID()
+	params := params(lineItems, "http://127.0.0.1:6600/cart")
+
+	s, err := session.New(params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, s.URL, http.StatusSeeOther)
+}
+
+func params(lineItems []*stripe.CheckoutSessionLineItemParams, cancelURL string) *stripe.CheckoutSessionParams {
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
 	params := &stripe.CheckoutSessionParams{
 		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
@@ -132,31 +125,24 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		AllowPromotionCodes: stripe.Bool(true),
 
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		Metadata:           map[string]string{"order_id": orderID},
 		LineItems:          lineItems,
 		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
 		SuccessURL:         stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
-		CancelURL:          stripe.String("http://127.0.0.1:6600/cart"),
+		CancelURL:          stripe.String(cancelURL),
 		// ReturnURL:        stripe.String("http://127.0.0.1:6600/cart"),
 		// UIMode:             stripe.String("embedded"),
 		CustomerCreation: stripe.String("always"),
 	}
-
-	s, err := session.New(params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, s.URL, http.StatusSeeOther)
+	return params
 }
 
+// Runs after the order completes
 func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("🔔 Webhook received")
 
 	const MaxBodyBytes = int64(65536)
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
-	payload, err := ioutil.ReadAll(r.Body)
+	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Request too large", http.StatusRequestEntityTooLarge)
 		return
@@ -173,38 +159,79 @@ func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Event Type:", event.Type)
 
 	if event.Type == "checkout.session.completed" {
-		var session stripe.CheckoutSession
-		err := json.Unmarshal(event.Data.Raw, &session)
+		var checkoutSession stripe.CheckoutSession
+		err := json.Unmarshal(event.Data.Raw, &checkoutSession)
 		if err != nil {
 			http.Error(w, "Failed to parse webhook", http.StatusBadRequest)
 			return
 		}
 
-		if session.CollectedInformation.ShippingDetails != nil {
-			address := session.CollectedInformation.ShippingDetails.Address
-			name := session.CollectedInformation.ShippingDetails.Name
+		var address *stripe.Address
+
+		if checkoutSession.CollectedInformation.ShippingDetails != nil {
+			address = checkoutSession.CollectedInformation.ShippingDetails.Address
+			name := checkoutSession.CollectedInformation.ShippingDetails.Name
 
 			fmt.Println("📦 Shipping to:", name)
 			fmt.Println("📍 Address:", address.Line1, address.City, address.PostalCode, address.Country)
 
 			// Use this info to store in your DB:
 			services.SaveShippingAddress(name, address.Line1, address.City, address.PostalCode, address.Country)
-
 		}
 
-		email := session.CustomerDetails.Email
+		email := checkoutSession.CustomerDetails.Email
 		fmt.Println("📧 Email:", email)
 
-		order_id := session.Metadata["order_id"]
+		// Now fetch the full session and expand line_items
+		var ev stripe.Event
+		if err := json.Unmarshal(payload, &ev); err != nil {
+			http.Error(w, "invalid payload", http.StatusBadRequest)
+			return
+		}
+
+		if ev.Type != "checkout.session.completed" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Unmarshal the minimal session from the event
+		var minimalSess stripe.CheckoutSession
+		if err := json.Unmarshal(ev.Data.Raw, &minimalSess); err != nil {
+			http.Error(w, "could not parse session", http.StatusBadRequest)
+			return
+		}
+		getParams := &stripe.CheckoutSessionParams{}
+		getParams.AddExpand("line_items.data.price.product")
+		fullSess, err := sessionpkg.Get(minimalSess.ID, getParams)
+		if err != nil {
+			fmt.Println("❌ Could not fetch full session:", err)
+			http.Error(w, "failed to fetch session", http.StatusInternalServerError)
+			return
+		}
+
+		var items []models.OrderItem
+		for _, li := range fullSess.LineItems.Data {
+			variantID, _ := strconv.Atoi(li.Price.Product.Metadata["variant_id"])
+			items = append(items, models.OrderItem{
+				VariantID:    variantID,
+				Quantity:     int(li.Quantity),
+				Price:        li.Price.UnitAmount,
+				ProductTitle: li.Price.Product.Name,
+				VariantColor: li.Price.Product.Description, // or from Metadata if you store color there
+			})
+		}
+
+		// var items []models.OrderItem
+		order_id := services.GenerateShortOrderID()
 
 		// TODO: Match session.ID or customer ID to user/cart
-		services.CreateOrder(order_id)
+		services.CreateOrder(order_id, email, address.Line1, address.City, address.PostalCode, address.Country, items)
 		// and then clear the cart or mark order as paid
 		services.ClearCart()
 
 		services.EmailOrderDetails(email)
 
-		fmt.Println("✅ Payment successful for session:", session.ID)
+		fmt.Println("✅ Payment successful for session:", checkoutSession.ID)
 		// e.g., cart.ClearCart(userID) or update order status in DB
 	}
 

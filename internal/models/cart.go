@@ -7,6 +7,7 @@ type CartItem struct {
 
 type CartItems struct {
 	Variant  Variant
+	Name     string
 	Quantity int
 	Total    float64
 }

@@ -3,7 +3,37 @@
 {{ end }}
 
 {{ define "content" }}
-    <h1>Search Results</h1>
-    
-    <a href="/">Back to Home</a>
+
+
+<h1>Search Results</h1>
+<p>{{ .OrderNumber }}</p>
+<p>{{ .Email }}</p>
+<p>{{ .Address }}</p>
+<p>{{ .City }}</p>
+<p>{{ .PostalCode }}</p>
+<p>{{ .Country }}</p>
+<p>Placed at: {{ .CreatedAt }}</p>
+
+<h2>Status</h2>
+<h3>Shipped</h3>
+
+<br>
+
+<ul>
+    {{ range .Products }}
+    <li>
+        <p>Variant ID: {{ .VariantID }}</p>
+        <p>Quantity: {{ .Quantity }}</p>
+        <p>Price: {{ .Price }}</p>
+        <p>Product Title: {{ .ProductTitle }}</p>
+        <p>Variant Color: {{ .VariantColor }}</p>
+    </li>
+    <br>
+    {{ end }}
+</ul>
+
+<a href="orders">Find another order</a>
+<a href="/">Back to Home</a>
+
+
 {{ end }}

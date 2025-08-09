@@ -17,11 +17,13 @@ func GetCartItems(r *http.Request) ([]models.CartItems, float64) {
 	var products []models.CartItems
 	for _, item := range cart {
 		variant, err := db.GetVariantByID(item.VariantID)
+		product, _ := db.GetProductByID(variant.ID)
 		if err == nil {
 			products = append(products, models.CartItems{
 				Variant:  variant,
 				Quantity: item.Quantity,
 				Total:    variant.Price * float64(item.Quantity),
+				Name:     product.Title,
 			})
 			total += variant.Price * float64(item.Quantity)
 		}
@@ -53,5 +55,5 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) models.Cart {
 
 // TODO:
 func ClearCart() {
-	println("clearing cart")
+	println("NOT IMPLEMENTED clearing cart")
 }

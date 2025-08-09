@@ -4,6 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+
+	"bookmaker.ca/internal/db"
+	"bookmaker.ca/internal/models"
 )
 
 func GenerateShortOrderID() string {
@@ -15,16 +18,17 @@ func GenerateShortOrderID() string {
 }
 
 // TODO:
-func CreateOrder(orderID string) {
-	println("creating order: ", orderID)
+func CreateOrder(orderNumber, email, address, city, postalCode, country string, items []models.OrderItem) {
+	db.InsertOrder(orderNumber, email, address, city, postalCode, country, items)
+	println("NOT IMPLEMENTED creating order: ", orderNumber)
 }
 
 // TODO:
 func SaveShippingAddress(name, line, city, postalCode, country string) {
-	fmt.Println("saving shipping address: ", name, line, city, postalCode, country)
+	fmt.Println("NOT IMPLEMENTED saving shipping address: ", name, line, city, postalCode, country)
 }
 
 // TODO:
 func EmailOrderDetails(email string) {
-	fmt.Println("emailing order details to: ", email)
+	fmt.Println("NOT IMPLEMENTED emailing order details to: ", email)
 }

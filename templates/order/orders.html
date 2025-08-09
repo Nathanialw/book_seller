@@ -6,12 +6,61 @@
     <h1>Orders</h1>
 
     <p>Find Order</p>
-    <form action="search-orders" method="GET">
+    <form id="orderSearchForm" method="GET">
         <label for="email">Email:</label>
         <input type="email" name="email" id="" required>
         <label for="order-number">Order Number:</label>
-        <input type="number" name="order-number" id="" required>
+        <input type="text" name="order-number" id="" required>
 
         <button type="submit" class="btn">Search</button>
     </form>
+
+<div id="errorMsg" style="color:red;"></div>
+
+<script>
+const form = document.getElementById('orderSearchForm');
+const errorMsg = document.getElementById('errorMsg');
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  errorMsg.textContent = '';
+
+  const formData = new FormData(form);
+  const params = new URLSearchParams(formData);
+
+  try {
+    const response = await fetch('/search-orders?' + params.toString(), {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      // If server responds with JSON error:
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.status === 'error') {
+          errorMsg.textContent = data.message || 'Order not found';
+        } else {
+          // Success case JSON if any (optional)
+          errorMsg.textContent = '';
+        }
+      } else if (response.redirected) {
+        // Follow redirect if server sent one
+        window.location.href = response.url;
+      } else {
+        // Server returned a normal HTML page (maybe order details)
+        const html = await response.text();
+        document.body.innerHTML = html; // or update page as you want
+      }
+    } else {
+      // Handle non-2xx errors
+      const data = await response.json();
+      errorMsg.textContent = data.message || 'Error: ' + response.status;
+    }
+  } catch (err) {
+    errorMsg.textContent = 'Network error: ' + err.message;
+  }
+});
+</script>
 {{ end }}
