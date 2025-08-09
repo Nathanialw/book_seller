@@ -48,13 +48,14 @@ func SearchOrders(email string, orderNumber string) (models.Order, error) {
 		err := rows.Scan(
 			&item.VariantID,
 			&item.Quantity,
-			&item.Price,
+			&item.Cents,
 			&item.ProductTitle,
 			&item.VariantColor,
 		)
 		if err != nil {
 			return models.Order{}, err
 		}
+		item.Price = float64(item.Cents) / 100.0
 		order.Products = append(order.Products, item)
 	}
 
@@ -88,7 +89,7 @@ func InsertOrder(orderNumber, email, address, city, postalCode, country string, 
 	for _, item := range items {
 		_, err = tx.Exec(ctx,
 			`INSERT INTO order_items (order_id, product_variant_id, quantity, price, product_title, variant_color) VALUES ($1, $2, $3, $4, $5, $6)`,
-			orderID, item.VariantID, item.Quantity, item.Price, item.ProductTitle, item.VariantColor,
+			orderID, item.VariantID, item.Quantity, item.Cents, item.ProductTitle, item.VariantColor,
 		)
 		if err != nil {
 			log.Printf("3Failed to create order: %v", err)

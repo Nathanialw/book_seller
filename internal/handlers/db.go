@@ -42,9 +42,6 @@ func SearchOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	orderNumber := r.URL.Query().Get("order-number")
 
-	println(email)
-	println(orderNumber)
-
 	if email == "" || orderNumber == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)

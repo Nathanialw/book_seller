@@ -215,7 +215,7 @@ func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 			items = append(items, models.OrderItem{
 				VariantID:    variantID,
 				Quantity:     int(li.Quantity),
-				Price:        li.Price.UnitAmount,
+				Cents:        li.Price.UnitAmount,
 				ProductTitle: li.Price.Product.Name,
 				VariantColor: li.Price.Product.Description, // or from Metadata if you store color there
 			})

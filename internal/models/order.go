@@ -17,7 +17,8 @@ type Order struct {
 type OrderItem struct {
 	VariantID    int
 	Quantity     int
-	Price        int64
+	Cents        int64
+	Price        float64
 	ProductTitle string
 	VariantColor string
 }
