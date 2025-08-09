@@ -13,6 +13,7 @@ type Variant struct {
 	ID        int
 	Color     string
 	Stock     int
+	Cents     int64
 	Price     float64
 	ImagePath string
 

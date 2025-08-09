@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -46,6 +47,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		color := colors[i]
 		stock, _ := strconv.Atoi(stockValues[i])
 		price, _ := strconv.ParseFloat(priceValues[i], 64)
+		cents := int64(math.Round(price * 100))
 		// Default to existing image path from hidden field
 		imagePath := existingImagePaths[i]
 
@@ -74,12 +76,12 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 			ID:        variantID,
 			Color:     color,
 			Stock:     stock,
-			Price:     price,
+			Cents:     cents,
 			ImagePath: imagePath,
 		}
 
 		if variantIds[i] == "new" {
-			db.InsertVariant(id, variant.Color, variant.Stock, variant.Price, variant.ImagePath)
+			db.InsertVariant(id, variant.Color, variant.Stock, variant.Cents, variant.ImagePath)
 		} else {
 			db.UpdateProductVariantByID(variant)
 		}

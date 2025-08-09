@@ -23,7 +23,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 
 	//TODO: //Get values from the cart
 	name := "The Go Programming Language Book"
-	currency := "usd"
 	var quantity int64 = 1
 	var amount int64 = 3499
 	//TODO: links for images within the site
@@ -38,14 +37,28 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 
 	params := &stripe.CheckoutSessionParams{
 		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
-			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}), // or any countries you want
+			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}),
 		},
+		ShippingOptions: []*stripe.CheckoutSessionShippingOptionParams{
+			{
+				ShippingRateData: &stripe.CheckoutSessionShippingOptionShippingRateDataParams{
+					DisplayName: stripe.String("Standard Shipping"),
+					Type:        stripe.String("fixed_amount"),
+					FixedAmount: &stripe.CheckoutSessionShippingOptionShippingRateDataFixedAmountParams{
+						Amount:   stripe.Int64(1500), // in cents
+						Currency: stripe.String("cad"),
+					},
+				},
+			},
+		},
+
+		AllowPromotionCodes: stripe.Bool(true),
 
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripe.String(currency),
+					Currency: stripe.String("CAD"),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name:   stripe.String(name),
 						Images: stripe.StringSlice([]string{image}),
@@ -81,13 +94,15 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	var lineItems []*stripe.CheckoutSessionLineItemParams
 
 	for _, item := range cartItems.Products {
-		amount := int64(item.Variant.Price * 100) // Stripe expects amount in cents
+		amount := int64(item.Variant.Cents)                         // Stripe expects amount in cents
+		imgPath := "https://nathanial.ca/assets/images/default.png" // + item.Variant.ImagePath
+
 		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
 			PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 				Currency: stripe.String("CAD"),
 				ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
 					Name:   stripe.String(item.Variant.Color),
-					Images: stripe.StringSlice([]string{item.Variant.ImagePath}),
+					Images: stripe.StringSlice([]string{imgPath}),
 				},
 				UnitAmount: stripe.Int64(amount),
 			},
@@ -98,15 +113,32 @@ func CreateCartCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	orderID := services.GenerateShortOrderID()
 
 	params := &stripe.CheckoutSessionParams{
-		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		Metadata:           map[string]string{"order_id": orderID},
-		LineItems:          lineItems,
 		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
 			AllowedCountries: stripe.StringSlice([]string{"CA", "US"}),
 		},
-		Mode:             stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:       stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
-		CancelURL:        stripe.String("http://127.0.0.1:6600/cart"),
+		ShippingOptions: []*stripe.CheckoutSessionShippingOptionParams{
+			{
+				ShippingRateData: &stripe.CheckoutSessionShippingOptionShippingRateDataParams{
+					DisplayName: stripe.String("Standard Shipping"),
+					Type:        stripe.String("fixed_amount"),
+					FixedAmount: &stripe.CheckoutSessionShippingOptionShippingRateDataFixedAmountParams{
+						Amount:   stripe.Int64(1500), // in cents
+						Currency: stripe.String("cad"),
+					},
+				},
+			},
+		},
+
+		AllowPromotionCodes: stripe.Bool(true),
+
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		Metadata:           map[string]string{"order_id": orderID},
+		LineItems:          lineItems,
+		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
+		SuccessURL:         stripe.String("http://127.0.0.1:6600/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:          stripe.String("http://127.0.0.1:6600/cart"),
+		// ReturnURL:        stripe.String("http://127.0.0.1:6600/cart"),
+		// UIMode:             stripe.String("embedded"),
 		CustomerCreation: stripe.String("always"),
 	}
 

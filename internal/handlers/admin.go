@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -169,6 +170,8 @@ func AddProductHandler(w http.ResponseWriter, r *http.Request) {
 			imagePath := ""
 
 			price, err := strconv.ParseFloat(prices[i], 64)
+			cents := int64(math.Round(price * 100))
+
 			if err != nil {
 				http.Error(w, "Invalid price", http.StatusBadRequest)
 				return
@@ -198,7 +201,7 @@ func AddProductHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Insert the variant into the book_variants table
-			err = db.InsertVariant(productID, color, stock, price, imagePath)
+			err = db.InsertVariant(productID, color, stock, cents, imagePath)
 			if err != nil {
 				http.Error(w, "Failed to insert variant", http.StatusInternalServerError)
 				return

@@ -15,7 +15,8 @@ func GetVariantByID(variant_id int) (models.Variant, error) {
 		SELECT id, color, stock, price, image_path
 		FROM product_variants
 		WHERE id = $1
-	`, variant_id).Scan(&v.ID, &v.Color, &v.Stock, &v.Price, &v.ImagePath)
+	`, variant_id).Scan(&v.ID, &v.Color, &v.Stock, &v.Cents, &v.ImagePath)
+	v.Price = float64(v.Cents) / 100.0
 
 	if err != nil {
 		return models.Variant{}, fmt.Errorf("error fetching variant: %v", err)
@@ -43,7 +44,8 @@ func GetVariantsByProductID(product_id int) ([]models.Variant, error) {
 	// Scan each variant and append to the variants slice
 	for rows.Next() {
 		var v models.Variant
-		err := rows.Scan(&v.ID, &v.Color, &v.Stock, &v.Price, &v.ImagePath)
+		err := rows.Scan(&v.ID, &v.Color, &v.Stock, &v.Cents, &v.ImagePath)
+		v.Price = float64(v.Cents) / 100.0
 		if err != nil {
 			// Handle scanning error for variants
 			return nil, fmt.Errorf("error scanning variant: %v", err)
@@ -61,7 +63,7 @@ func UpdateProductVariants(product_id int, variants []models.Variant) error {
 			SET color=$1, stock=$2, price=$3, image_path=$4
 			WHERE product_id=$5 AND color=$1
 		`
-		_, err := db.Exec(ctx, queryVariant, variant.Color, variant.Stock, variant.Price, variant.ImagePath, product_id)
+		_, err := db.Exec(ctx, queryVariant, variant.Color, variant.Stock, variant.Cents, variant.ImagePath, product_id)
 		if err != nil {
 			log.Printf("Failed to update variant (color: %s): %v\n", variant.Color, err)
 			return err
@@ -76,7 +78,7 @@ func UpdateProductVariantByID(variant models.Variant) error {
 		SET color = $1, stock = $2, price = $3, image_path = $4
 		WHERE id = $5
 	`
-	_, err := db.Exec(ctx, query, variant.Color, variant.Stock, variant.Price, variant.ImagePath, variant.ID)
+	_, err := db.Exec(ctx, query, variant.Color, variant.Stock, variant.Cents, variant.ImagePath, variant.ID)
 	if err != nil {
 		log.Printf("Failed to update variant (id: %d): %v\n", variant.ID, err)
 		return err
@@ -84,7 +86,7 @@ func UpdateProductVariantByID(variant models.Variant) error {
 	return nil
 }
 
-func InsertVariant(product_id int, color string, stock int, price float64, imagePath string) error {
+func InsertVariant(product_id int, color string, stock int, price int64, imagePath string) error {
 	_, err := db.Exec(ctx, `
 		INSERT INTO product_variants (product_id, color, stock, price, image_path)
 		VALUES ($1, $2, $3, $4, $5)

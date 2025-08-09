@@ -28,7 +28,7 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 			INSERT INTO product_variants (product_id, color, stock, price, image_path)
 			VALUES ($1, $2, $3, $4, $5)
 		`
-		_, err := db.Exec(ctx, sqlVariant, productID, v.Color, v.Stock, v.Price, v.ImagePath)
+		_, err := db.Exec(ctx, sqlVariant, productID, v.Color, v.Stock, v.Cents, v.ImagePath)
 		if err != nil {
 			log.Printf("Failed to insert variant: %v\n", err)
 			return err
@@ -131,7 +131,7 @@ func GetAllProducts() ([]models.Product, error) {
 		// Use pointers for nullable fields
 		var color *string
 		var stock *int
-		var price *float64
+		var price *int64
 		var imagePath *string
 
 		// Scan the values into the appropriate variables, including pointers
@@ -162,7 +162,8 @@ func GetAllProducts() ([]models.Product, error) {
 			v.Stock = *stock
 		}
 		if price != nil {
-			v.Price = *price
+			v.Cents = *price
+			v.Price = float64(*price) / 100.0
 		}
 		if imagePath != nil {
 			v.ImagePath = *imagePath
