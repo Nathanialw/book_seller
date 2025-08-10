@@ -1,21 +1,35 @@
 Here’s a typical layout for a growing eCommerce site project:
 
-bookmaker.ca/
+eCommerce site
 ├── cmd/
 │   └── main.go               # Entry point to start the server
 ├── internal/
+│   ├── admin/               
+│   │   └── admin.go
 │   ├── config/               # Configuration (env vars, app settings)
 │   │   └── config.go
+│   ├── cache/                   
+│   │   ├── cache.go 
 │   ├── db/                   # Database access and setup
-│   │   ├── db.go             # DB init and connection pool
-│   │   └── migrations/       # SQL migration files
+│   │   ├── db.go 
+│   │   ├── order.go 
+│   │   ├── product.go 
+│   │   └── variant.go
 │   ├── models/               # Domain models (Book, User, Order, etc.)
-│   │   └── book.go
+│   │   ├── cart.go 
+│   │   ├── order.go 
+│   │   └── product.go
 │   ├── handlers/             # HTTP handlers for routes
-│   │   ├── book_handler.go
-│   │   └── checkout_handler.go
+│   │   ├── admin.go 
+│   │   ├── cart.go 
+│   │   ├── db.go 
+│   │   ├── home.go 
+│   │   ├── orders.go 
+│   │   ├── payments.go 
+│   │   └── product.go
 │   ├── services/             # Business logic (payment, inventory, etc.)
-│   │   └── payment.go
+│   │   ├── cart.go
+│   │   └── order.go
 │   ├── routes/               # Route initialization
 │   │   └── routes.go
 │   ├── middleware/           # Custom middleware (logging, auth, CORS, etc.)
@@ -24,10 +38,51 @@ bookmaker.ca/
 │       └── email.go
 ├── static/                   # Static assets (CSS, JS, images)
 │   ├── css/
-│   └── js/
+│   │   ├── base.css 
+│   │   ├── edit-product.css 
+│   │   ├── footer.css 
+│   │   ├── header.css 
+│   │   ├── hero.css 
+│   │   ├── product-grid.css 
+│   │   └── search.css
+│   ├── js/
+│   │   ├── checkout.js 
+│   │   ├── hero.js 
+│   │   └── order.js
+│   └── img/
+│       └── example-logo.png
 ├── templates/                # HTML templates
-│   ├── base.html
-│   └── booklist.html
+│   ├── admin
+│   │   ├── add-product.html 
+│   │   ├── admin.html 
+│   │   ├── blogs.html 
+│   │   ├── edit-product.html 
+│   │   ├── edit-products.html 
+│   │   ├── header.html 
+│   │   ├── login.html 
+│   │   └── videos.html
+│   ├── order
+│   │   ├── order-results.html 
+│   │   ├── orders.html 
+│   ├── partials
+│   │   ├── footer.html
+│   │   ├── header.html
+│   │   └── search.html
+│   ├── product
+│   │   ├── cart.html 
+│   │   ├── content-custom.html 
+│   │   ├── content.html 
+│   │   ├── product-grid.html 
+│   │   ├── product-list.html 
+│   │   ├── search-results.html 
+│   │   └── variant-custom.html
+│   ├── about.html 
+│   ├── blog.html 
+│   ├── forum.html 
+│   ├── home.html 
+│   ├── layout.html 
+│   ├── success.html 
+│   └── videos.html
 ├── go.mod
 └── README.md
 

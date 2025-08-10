@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS products (
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     search tsvector GENERATED ALWAYS AS (
         to_tsvector('english', title || ' ' || author || ' ' || coalesce(description, ''))
     ) STORED
@@ -69,7 +70,8 @@ CREATE TABLE IF NOT EXISTS product_variants (
     color TEXT NOT NULL,
     image_path TEXT NOT NULL,
     price NUMERIC(10, 2),
-    stock INTEGER NOT NULL CHECK (stock >= 0)
+    stock INTEGER NOT NULL CHECK (stock >= 0),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: orders

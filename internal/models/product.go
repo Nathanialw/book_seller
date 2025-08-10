@@ -18,17 +18,17 @@ type Variant struct {
 	Cents     int64
 	Price     float64
 	ImagePath string
-
-	// //size
-	// Pages  string
-	// Width  string
-	// Height string
-	// Length string
-
-	// //materials
-	// Cover string
-	// Paper string
-
-	// //process
-	// Binding string
 }
+
+// //size
+// Pages  string
+// Width  string
+// Height string
+// Length string
+
+// //materials
+// Cover string
+// Paper string
+
+// //process
+// Binding string

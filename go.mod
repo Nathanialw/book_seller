@@ -1,4 +1,4 @@
-module bookmaker.ca
+module ecommerce
 
 go 1.23.0
 
