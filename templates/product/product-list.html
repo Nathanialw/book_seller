@@ -1,13 +1,10 @@
 {{ define "title" }}
     <title>product list</title>
+    <link rel="stylesheet" href="/static/css/product-grid.css">
 {{ end }}
 
 {{define "content"}}
-    {{template "search" .}}
+    {{template "search" . }}
 
-    {{range .}}
-        <div>
-            <h3><a href="product/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
-        </div>
-    {{end}}
+    {{template "product_grid" . }}
 {{end}}

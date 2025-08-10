@@ -40,25 +40,70 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 
 func SearchProducts(query string) ([]models.Product, error) {
 	rows, err := db.Query(ctx, `
-        SELECT id, title, author
-        FROM products
-        WHERE title % $1 OR author % $1
-        ORDER BY GREATEST(similarity(title, $1), similarity(author, $1)) DESC
-        LIMIT 20
-    `, query)
+		SELECT b.id, b.title, b.author, b.description,
+		       v.color, v.stock, v.price, v.image_path
+		FROM products b
+		LEFT JOIN product_variants v ON b.id = v.product_id
+		WHERE b.title % $1 OR b.author % $1
+		ORDER BY GREATEST(similarity(b.title, $1), similarity(b.author, $1)) DESC,
+		         b.id, v.color
+		LIMIT 20
+	`, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var products []models.Product
+	var currentProduct *models.Product
+
 	for rows.Next() {
 		var b models.Product
-		if err := rows.Scan(&b.ID, &b.Title, &b.Author); err != nil {
-			continue
+		var v models.Variant
+
+		var color *string
+		var stock *int
+		var price *int64
+		var imagePath *string
+
+		err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Description,
+			&color, &stock, &price, &imagePath)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			return nil, err
 		}
-		products = append(products, b)
+
+		if currentProduct == nil || currentProduct.ID != b.ID {
+			if currentProduct != nil {
+				products = append(products, *currentProduct)
+			}
+			currentProduct = &b
+			currentProduct.Variants = []models.Variant{}
+		}
+
+		if color != nil {
+			v.Color = *color
+		}
+		if stock != nil {
+			v.Stock = *stock
+		}
+		if price != nil {
+			v.Cents = *price
+			v.Price = float64(*price) / 100.0
+		}
+		if imagePath != nil {
+			v.ImagePath = *imagePath
+		}
+
+		if v.Color != "" {
+			currentProduct.Variants = append(currentProduct.Variants, v)
+		}
 	}
+
+	if currentProduct != nil {
+		products = append(products, *currentProduct)
+	}
+
 	return products, rows.Err()
 }
 

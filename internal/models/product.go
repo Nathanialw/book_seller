@@ -5,6 +5,8 @@ type Product struct {
 	Title       string
 	Author      string
 	Description string
+	LowestPrice float64
+	Type0       string
 
 	Variants []Variant
 }

@@ -1,19 +1,14 @@
 {{ define "title" }}
     <title>Search</title>
+    <link rel="stylesheet" href="/static/css/product-grid.css">
 {{ end }}
 
 {{ define "content" }}
     {{template "search" .}}
 
-    <h1>Search Results</h1>
     {{ if . }}
-        <ul>
-        {{ range . }}
-            <li><a href="/product/{{.ID}}">{{.Title}}</a> by {{.Author}}</li>
-        {{ end }}
-        </ul>
+        {{template "product_grid" . }}
     {{ else }}
         <p>No books found for your search.</p>
     {{ end }}
-    <a href="/">Back to Home</a>
 {{ end }}
