@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"bookmaker.ca/internal/db"
-	"bookmaker.ca/internal/models"
-	"bookmaker.ca/internal/services"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/internal/services"
 )
 
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {

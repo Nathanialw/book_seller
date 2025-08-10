@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"bookmaker.ca/internal/admin"
-	"bookmaker.ca/internal/cache"
-	"bookmaker.ca/internal/db"
-	"bookmaker.ca/internal/models"
+	"github.com/nathanialw/ecommerce/internal/admin"
+	"github.com/nathanialw/ecommerce/internal/cache"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {

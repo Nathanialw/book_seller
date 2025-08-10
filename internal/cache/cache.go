@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"bookmaker.ca/internal/db"
+	"github.com/nathanialw/ecommerce/internal/db"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"bookmaker.ca/internal/cache"
+	"github.com/nathanialw/ecommerce/internal/cache"
 )
 
 func loggedIn(r *http.Request) bool {

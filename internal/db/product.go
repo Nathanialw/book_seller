@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"bookmaker.ca/internal/models"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 // InsertProduct inserts a new product row into the products table.

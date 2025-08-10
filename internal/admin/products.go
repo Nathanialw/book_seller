@@ -9,9 +9,9 @@ import (
 	"os"
 	"strconv"
 
-	"bookmaker.ca/internal/cache"
-	"bookmaker.ca/internal/db"
-	"bookmaker.ca/internal/models"
+	"github.com/nathanialw/ecommerce/internal/cache"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {

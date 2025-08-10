@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"bookmaker.ca/internal/models"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func GetVariantByID(variant_id int) (models.Variant, error) {

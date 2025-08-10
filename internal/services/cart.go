@@ -4,8 +4,8 @@ import (
 	"math"
 	"net/http"
 
-	"bookmaker.ca/internal/db"
-	"bookmaker.ca/internal/models"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func GetCartItems(r *http.Request) ([]models.CartItems, float64) {

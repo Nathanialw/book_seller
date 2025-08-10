@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"bookmaker.ca/internal/db"
+	"github.com/nathanialw/ecommerce/internal/db"
 )
 
 func ProductDetailHandler(w http.ResponseWriter, r *http.Request) {

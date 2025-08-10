@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"bookmaker.ca/internal/handlers"
+	"github.com/nathanialw/ecommerce/internal/handlers"
 
 	"github.com/gorilla/mux"
 )

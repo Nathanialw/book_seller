@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"bookmaker.ca/internal/cache"
-	"bookmaker.ca/internal/db"
-	"bookmaker.ca/internal/models"
-	"bookmaker.ca/internal/routes"
+	"github.com/nathanialw/ecommerce/internal/cache"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/internal/routes"
 )
 
 func main() {
