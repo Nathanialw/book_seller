@@ -31,6 +31,7 @@ func ProductDetailHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
+		"templates/partials/search.html",
 		"templates/partials/footer.html",
 		"templates//product/content.html",
 		"templates//product/variant-custom.html",
@@ -58,6 +59,7 @@ func ProductListHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
+		"templates/partials/search.html",
 		"templates/partials/footer.html",
 		"templates/product/product-list.html",
 	))

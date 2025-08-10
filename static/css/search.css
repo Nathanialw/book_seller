@@ -1,0 +1,46 @@
+
+
+.hero-container {
+    /* background-color: blue; */
+    display: flex;
+    align-items: center;
+    width: 100vw;
+    height: 155px;
+}
+
+.logo-img {
+    width: 150px;
+    height: 150px;
+}
+
+.hero-items {
+    margin: auto;
+    display: flex;
+    align-items: center;
+    position: relative;
+    height: 155px;
+    width: 1000px;
+
+}
+
+
+form {
+    margin: 0;
+    padding: 0;
+}
+
+.search-container {
+    width: 800px;
+    margin: auto;
+}
+
+.search-form input{
+    padding: 0.5rem;
+    width: 500px;
+    height: 55px;
+}
+
+.search-form button{
+    width: 55px;
+    height: 55px;
+}

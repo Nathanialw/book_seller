@@ -21,6 +21,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/admin/header.html",
+		"templates/partials/search.html",
 		"templates/partials/footer.html",
 		"templates/home.html",
 	))
@@ -67,6 +68,17 @@ func BlogsHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
 		"templates/blog.html",
+	))
+	d := 0
+	tmpl.Execute(w, d)
+}
+
+func ForumHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layout.html",
+		"templates/partials/header.html",
+		"templates/partials/footer.html",
+		"templates/forum.html",
 	))
 	d := 0
 	tmpl.Execute(w, d)

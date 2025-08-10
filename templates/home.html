@@ -1,17 +1,71 @@
 {{ define "title" }}
     <title>Book Maker</title>
+    <link rel="stylesheet" href="/static/css/hero.css">
 {{ end }}
 
-{{ define "content" }}
-    <h1>Welcome to the Store!</h1>
+{{ define "content" }}   
+
+    {{template "search" .}}
+    
+    <div class="carousel">
+
+        <!-- TODO: -->
+        <!-- store these in the DB and change through admin panel, fill out wiht Go -->
+        <a href="blogs">
+            <div class="slide active" style="background-image: url('static/img/green.png');">
+                <div class="overlay">
+                    <h1>Advertisement   for product 1</h1>
+                    <p>hook text</p>
+                </div>
+            </div>
+        </a>
+        <a href="blogs">
+            <div class="slide" style="background-image: url('static/img/red.webp');">
+                <div class="overlay">
+                    <h1>Advertisement for product 2</h1>
+                    <p>hook text</p>
+                </div>
+            </div>
+        </a>
+        <a href="blogs">
+            <div class="slide" style="background-image: url('static/img/blue.jpg');">
+                <div class="overlay">
+                    <h1>Advertisement for product 3</h1>
+                    <p>hook text</p>
+                </div>
+            </div>
+        </a>
+        <a href="blogs">
+            <div class="slide" style="background-image: url('static/img/brown.webp');">
+                <div class="overlay">
+                    <h1>Advertisement for product 4</h1>
+                    <p>hook text</p>
+                </div>
+            </div>
+        </a>
+        <!-- Navigation Dots -->
+        <div class="dots"></div>
+    </div>
+
+    <script src="/static/js/hero.js"></script>
+
+
     <br>
     
-    <!-- go to page of books returning a list of found -->
-    <h2>Search DB</h2> 
-    <form action="/search-products" method="GET">
-        <input type="text" name="q" id="search" placeholder="Enter search term" required>
-        <button type="submit">Submit</button>
-    </form>
+    <h2>Recently Added</h2>
+
+    <div class="carousel"></div>
+        <a href="blogs">
+            <div class="slide" style="background-image: url('static/img/brown.webp');">
+                <div class="overlay">
+                    <h1>Advertisement for product 4</h1>
+                    <p>hook text</p>
+                </div>
+            </div>
+        </a>
+
+
+    <h2>Most viewed</h2>
 
     <!-- search and select from a list -->
     <h2>Products</h2>
@@ -23,4 +77,5 @@
     </ul>
     <br>
     <h2><a href="products">All Products</a></h2>
+
 {{ end }}

@@ -4,6 +4,8 @@
 {{ end }}
 
 {{ define "content" }}
+    {{template "search" .}}
+
     <h1>Product</h1>
     <h3>{{.Title}} by {{.Author}}</h3>
     <p>{{.Description}}</p>

@@ -31,6 +31,7 @@ func SearchProductsHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(
 		"templates/layout.html",
 		"templates/partials/header.html",
+		"templates/partials/search.html",
 		"templates/partials/footer.html",
 		"templates/search-results.html",
 	))

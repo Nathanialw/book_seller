@@ -1,0 +1,19 @@
+{{ define "search" }}
+    <!-- go to page of books returning a list of found -->
+     <section class="hero-container">
+        <div class="hero-items">
+            <div class="logo-container">
+                <a href="/">
+                    <img class="img logo-img" src="/static/img/logo/logo.jpg" alt="" srcset="">
+                </a>
+            </div>
+            <div class="search-container">
+                <form class="search-form" action="/search-products" method="GET">
+                    <input type="text" name="q" id="search" placeholder="Search..." required>
+                    <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+{{end}}

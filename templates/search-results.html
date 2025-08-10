@@ -3,6 +3,8 @@
 {{ end }}
 
 {{ define "content" }}
+    {{template "search" .}}
+
     <h1>Search Results</h1>
     {{ if . }}
         <ul>

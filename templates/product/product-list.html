@@ -3,6 +3,8 @@
 {{ end }}
 
 {{define "content"}}
+    {{template "search" .}}
+
     {{range .}}
         <div>
             <h3><a href="product/{{.ID}}">{{.Title}} by {{.Author}}</a></h3>
