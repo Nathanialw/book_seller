@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nathanialw/ecommerce/internal/admin"
-	"github.com/nathanialw/ecommerce/internal/cache"
-	"github.com/nathanialw/ecommerce/internal/db"
-	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/Nathanialw/ecommerce/internal/admin"
+	"github.com/Nathanialw/ecommerce/internal/cache"
+	"github.com/Nathanialw/ecommerce/internal/db"
+	"github.com/Nathanialw/ecommerce/internal/models"
 )
 
 func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {

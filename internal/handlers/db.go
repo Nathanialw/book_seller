@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/Nathanialw/ecommerce/internal/db"
 )
 
 func SearchOrdersHandler(w http.ResponseWriter, r *http.Request) {

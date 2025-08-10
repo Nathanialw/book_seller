@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/Nathanialw/ecommerce/internal/models"
 
 	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5/pgxpool"

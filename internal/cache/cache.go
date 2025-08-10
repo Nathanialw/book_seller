@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/Nathanialw/ecommerce/internal/db"
 )
 
 var (

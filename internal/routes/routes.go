@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/nathanialw/ecommerce/internal/handlers"
+	"github.com/Nathanialw/ecommerce/internal/handlers"
 
 	"github.com/gorilla/mux"
 )

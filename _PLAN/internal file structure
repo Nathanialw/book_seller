@@ -1,6 +1,6 @@
 Here’s a typical layout for a growing eCommerce site project:
 
-eCommerce site
+eCommerce framework
 ├── cmd/
 │   └── main.go               # Entry point to start the server
 ├── internal/

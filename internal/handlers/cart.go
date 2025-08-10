@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/nathanialw/ecommerce/internal/db"
-	"github.com/nathanialw/ecommerce/internal/models"
-	"github.com/nathanialw/ecommerce/internal/services"
+	"github.com/Nathanialw/ecommerce/internal/db"
+	"github.com/Nathanialw/ecommerce/internal/models"
+	"github.com/Nathanialw/ecommerce/internal/services"
 )
 
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {

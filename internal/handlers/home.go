@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/nathanialw/ecommerce/internal/cache"
+	"github.com/Nathanialw/ecommerce/internal/cache"
 )
 
 func loggedIn(r *http.Request) bool {
