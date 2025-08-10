@@ -1,4 +1,5 @@
-module ecommerce
+module github.com/nathanialw/ecommerce
+
 
 go 1.23.0
 

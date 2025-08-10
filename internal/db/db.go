@@ -4,7 +4,8 @@ import (
 	"context"
 	"log"
 
-	"bookmaker.ca/internal/models"
+	"ecommerce/internal/models"
+
 	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
