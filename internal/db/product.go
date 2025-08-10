@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
 // InsertProduct inserts a new product row into the products table.

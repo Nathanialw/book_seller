@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nathanialw/ecommerce/internal/db"
-	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
 func GetCartItems(r *http.Request) ([]models.CartItems, float64) {

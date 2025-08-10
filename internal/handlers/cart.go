@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/nathanialw/ecommerce/internal/db"
-	"github.com/nathanialw/ecommerce/internal/models"
 	"github.com/nathanialw/ecommerce/internal/services"
+	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {

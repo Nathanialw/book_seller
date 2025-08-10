@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
 func GetVariantByID(variant_id int) (models.Variant, error) {

@@ -9,8 +9,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/nathanialw/ecommerce/internal/models"
 	"github.com/nathanialw/ecommerce/internal/services"
+	"github.com/nathanialw/ecommerce/pkg/models"
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	sessionpkg "github.com/stripe/stripe-go/v82/checkout/session"

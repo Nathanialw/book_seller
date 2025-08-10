@@ -7,8 +7,8 @@ import (
 
 	"github.com/nathanialw/ecommerce/internal/cache"
 	"github.com/nathanialw/ecommerce/internal/db"
-	"github.com/nathanialw/ecommerce/internal/models"
 	"github.com/nathanialw/ecommerce/internal/routes"
+	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
 func main() {
