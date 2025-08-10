@@ -43,14 +43,3 @@ adminPass = "securepassword123"
 go build -buildvcs=false -o deploy/main.exe ./cmd
 go build -buildvcs=false -o deploy/main ./cmd
 
-# In your ecommerce repo:
-git checkout master
-# Make sure go.mod is fixed to github.com/nathanialw/ecommerce
-
-git add go.mod
-git commit -m "Fix module path to github.com/Nathanialw/ecommerce"
-git push origin master
-
-# Create a new tag
-git tag v0.2.0
-git push origin v0.2.0

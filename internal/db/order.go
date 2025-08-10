@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"github.com/Nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func SearchOrders(email string, orderNumber string) (models.Order, error) {

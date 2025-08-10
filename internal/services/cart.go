@@ -4,8 +4,8 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/Nathanialw/ecommerce/internal/db"
-	"github.com/Nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func GetCartItems(r *http.Request) ([]models.CartItems, float64) {

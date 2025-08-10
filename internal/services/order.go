@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/Nathanialw/ecommerce/internal/db"
-	"github.com/Nathanialw/ecommerce/internal/models"
+	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/models"
 )
 
 func GenerateShortOrderID() string {
