@@ -9,9 +9,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nathanialw/ecommerce/internal/cache"
 	"github.com/nathanialw/ecommerce/internal/db"
+	"github.com/nathanialw/ecommerce/internal/migrations"
 	"github.com/nathanialw/ecommerce/pkg/models"
 	"github.com/nathanialw/ecommerce/pkg/routes"
 )
+
+func Init() (*migrations.Config, error) {
+	migrations.Init()
+	config, err := migrations.LoadConfig(migrations.ConfigPath)
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	return config, err
+}
 
 func Run() (*mux.Router, *pgxpool.Pool) {
 	gob.Register([]models.CartItem{})

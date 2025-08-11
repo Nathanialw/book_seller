@@ -6,7 +6,7 @@ import (
 
 func main() {
 	// manage.Run()
-
-	manage.Setup()
+	config, _ := manage.Init()
+	manage.Setup(config)
 
 }

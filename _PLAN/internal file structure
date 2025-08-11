@@ -6,8 +6,6 @@ eCommerce framework
 ├── internal/
 │   ├── admin/               
 │   │   └── admin.go
-│   ├── config/               # Configuration (env vars, app settings)
-│   │   └── config.go
 │   ├── cache/                   
 │   │   ├── cache.go 
 │   ├── db/                   # Database access and setup
@@ -15,7 +13,7 @@ eCommerce framework
 │   │   ├── order.go 
 │   │   ├── product.go 
 │   │   └── variant.go
-│   ├── models/               # Domain models (Book, User, Order, etc.)
+│   ├── models/               # Domain models (Product, User, Order, etc.)
 │   │   ├── cart.go 
 │   │   ├── order.go 
 │   │   └── product.go
