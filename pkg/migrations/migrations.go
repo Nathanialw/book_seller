@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -9,6 +10,10 @@ import (
 )
 
 func Migrate() {
+
+	fmt.Println("commade:", os.Args[1])
+	fmt.Println("parameter:", os.Args[2])
+
 	migrations.Init()
 	flag.Parse()
 	// Load configuration

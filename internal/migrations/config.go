@@ -9,9 +9,6 @@ import (
 )
 
 func LoadConfig(path string) (*Config, error) {
-
-	println(ConfigPath)
-
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading config file: %w", err)
