@@ -34,8 +34,10 @@ eCommerce framework
 │   │   └── routes.go
 │   ├── middleware/           # Custom middleware (logging, auth, CORS, etc.)
 │   │   └── logging.go
-│   └── utils/                # Helpers/utilities (email, slugify, etc.)
-│       └── email.go
+│   ├── utils/                # Helpers/utilities (email, slugify, etc.)
+│   │   └── email.go
+│   └── migrations/                
+│       └── migrations.go
 ├── pkg/            
 │   └── models
 │       ├── cart.go

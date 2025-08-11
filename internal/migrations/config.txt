@@ -1,5 +1,0 @@
-#version 5
-#begin models
-order.go Order orders migrations.sql
-order.go OrderItem order_items migrations.sql
-#end models

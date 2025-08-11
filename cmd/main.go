@@ -1,22 +1,12 @@
 package main
 
 import (
-	"github.com/nathanialw/ecommerce/pkg/migrations"
+	"github.com/nathanialw/ecommerce/pkg/manage"
 )
 
 func main() {
-	// gob.Register([]models.CartItem{})
+	// manage.Run()
 
-	// db.InitDB()
-	// if err := cache.LoadCache(); err != nil {
-	// 	log.Fatalf("Failed to load genres: %v", err)
-	// }
+	manage.Setup()
 
-	// r := routes.SetupRoutes()
-	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-	// log.Println("Starting server on :6600")
-	// http.ListenAndServe(":6600", r)
-
-	migrations.Migrate()
 }

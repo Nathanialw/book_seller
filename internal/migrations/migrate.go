@@ -21,6 +21,36 @@ func Init() {
 	flag.BoolVar(&strictMode, "strict", false, "Abort if models don't match target version")
 }
 
+func Migrate(config *Config) {
+	flag.Parse()
+
+	// Ensure directories exist
+	if err := EnsureDirs(config); err != nil {
+		log.Fatalf("Directory setup failed: %v", err)
+	}
+
+	// Initialize state file if it doesn't exist
+	if _, err := os.Stat(config.Paths.StateFile); os.IsNotExist(err) {
+		if err := InitStateFile(config.Paths.StateFile); err != nil {
+			log.Fatalf("Failed to initialize state file: %v", err)
+		}
+	}
+
+	if err := VerifySchemaOnStart(config); err != nil {
+		log.Fatalf("Schema verification failed: %v", err)
+	}
+
+	if Rollback {
+		if err := HandleRollback(config); err != nil {
+			log.Fatalf("Rollback failed: %v", err)
+		}
+	} else {
+		if err := HandleMigration(config); err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		}
+	}
+}
+
 // Then fix the initStateFile function:
 func InitStateFile(path string) error {
 	initialState := SchemaState{
