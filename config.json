@@ -1,0 +1,36 @@
+{
+  "database": {
+    "host": "localhost",
+    "name": "ecommerce",
+    "password": "securepassword",
+    "port": "5432",
+    "sslmode": "disable",
+    "user": "admin"
+  },
+  "models": [
+    {
+      "go_file": "order.go",
+      "out_file": "migrations.sql",
+      "struct_name": "Order",
+      "table_name": "orders"
+    },
+    {
+      "go_file": "order.go",
+      "out_file": "migrations.sql",
+      "struct_name": "OrderItem",
+      "table_name": "order_items"
+    }
+  ],
+  "paths": {
+    "archived_dir": "./internal/migrate/migrations/archived",
+    "config_file": "config.json",
+    "history_dir": "./internal/migrate/migrations/history",
+    "migration_dir": "./internal/migrate/migrations",
+    "model_dir": "./internal/models",
+    "state_file": "./internal/migrate/migrations/schema_state.json"
+  },
+  "settings": {
+    "version_prefix_length": 5
+  },
+  "version": 0
+}
