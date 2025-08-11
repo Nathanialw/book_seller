@@ -5,16 +5,18 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nathanialw/ecommerce/internal/cache"
 	"github.com/nathanialw/ecommerce/internal/db"
 	"github.com/nathanialw/ecommerce/pkg/models"
 	"github.com/nathanialw/ecommerce/pkg/routes"
 )
 
-func Run() {
+func Run() (*mux.Router, *pgxpool.Pool) {
 	gob.Register([]models.CartItem{})
 
-	db.InitDB()
+	db := db.InitDB()
 	if err := cache.LoadCache(); err != nil {
 		log.Fatalf("Failed to load genres: %v", err)
 	}
@@ -24,4 +26,6 @@ func Run() {
 
 	log.Println("Starting server on :6600")
 	http.ListenAndServe(":6600", r)
+
+	return r, db
 }

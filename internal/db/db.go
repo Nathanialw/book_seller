@@ -14,12 +14,13 @@ var db *pgxpool.Pool
 var ctx = context.Background()
 var Store = sessions.NewCookieStore([]byte("super-secret-key")) // use a strong key in production
 
-func InitDB() {
+func InitDB() *pgxpool.Pool {
 	var err error
 	db, err = pgxpool.New(context.Background(), "postgres://admin:securepassword@localhost/ecommerce")
 	if err != nil {
 		log.Fatal("Unable to connect to database: ", err)
 	}
+	return db
 }
 
 func GetCache() ([]string, error) {
