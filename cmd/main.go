@@ -11,21 +11,6 @@ import (
 	"github.com/nathanialw/ecommerce/pkg/routes"
 )
 
-func main() {
-	gob.Register([]models.CartItem{})
-
-	db.InitDB()
-	if err := cache.LoadCache(); err != nil {
-		log.Fatalf("Failed to load genres: %v", err)
-	}
-
-	r := routes.SetupRoutes()
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-	log.Println("Starting server on :6600")
-	http.ListenAndServe(":6600", r)
-}
-
 func Run() {
 	gob.Register([]models.CartItem{})
 
