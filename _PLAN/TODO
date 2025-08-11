@@ -33,7 +33,7 @@ g9Hx11MOUiy006jrs55W6"
 deploy/setup-postgres.ps1
 windows postgres login: walton13
 
-sudo -u postgres psql -d bookmaker
+sudo -u postgres psql -d ecommerce
 
 @Login:
 adminUser = "admin"

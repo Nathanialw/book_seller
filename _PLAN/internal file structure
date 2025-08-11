@@ -36,6 +36,11 @@ eCommerce framework
 │   │   └── logging.go
 │   └── utils/                # Helpers/utilities (email, slugify, etc.)
 │       └── email.go
+├── pkg/            
+│   └── models
+│       ├── cart.go
+│       ├── order.go
+│       └── product.go
 ├── static/                   # Static assets (CSS, JS, images)
 │   ├── css/
 │   │   ├── base.css 
