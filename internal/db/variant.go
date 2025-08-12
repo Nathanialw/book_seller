@@ -13,7 +13,7 @@ func GetVariantByID(variant_id int) (models.Variant, error) {
 
 	err := db.QueryRow(context.Background(), `
 		SELECT id, color, stock, price, image_path
-		FROM product_variants
+		FROM variants
 		WHERE id = $1
 	`, variant_id).Scan(&v.ID, &v.Color, &v.Stock, &v.Cents, &v.ImagePath)
 	v.Price = float64(v.Cents) / 100.0
@@ -32,7 +32,7 @@ func GetVariantsByProductID(product_id int) ([]models.Variant, error) {
 	// Query for variants associated with the product
 	rows, err := db.Query(context.Background(), `
 		SELECT id, color, stock, price, image_path
-		FROM product_variants
+		FROM variants
 		WHERE product_id = $1
 	`, product_id)
 	if err != nil {
@@ -59,7 +59,7 @@ func GetVariantsByProductID(product_id int) ([]models.Variant, error) {
 func UpdateProductVariants(product_id int, variants []models.Variant) error {
 	for _, variant := range variants {
 		queryVariant := `
-			UPDATE product_variants
+			UPDATE variants
 			SET color=$1, stock=$2, price=$3, image_path=$4
 			WHERE product_id=$5 AND color=$1
 		`
@@ -74,7 +74,7 @@ func UpdateProductVariants(product_id int, variants []models.Variant) error {
 
 func UpdateProductVariantByID(variant models.Variant) error {
 	query := `
-		UPDATE product_variants
+		UPDATE variants
 		SET color = $1, stock = $2, price = $3, image_path = $4
 		WHERE id = $5
 	`
@@ -88,7 +88,7 @@ func UpdateProductVariantByID(variant models.Variant) error {
 
 func InsertVariant(product_id int, color string, stock int, price int64, imagePath string) error {
 	_, err := db.Exec(ctx, `
-		INSERT INTO product_variants (product_id, color, stock, price, image_path)
+		INSERT INTO variants (product_id, color, stock, price, image_path)
 		VALUES ($1, $2, $3, $4, $5)
 	`, product_id, color, stock, price, imagePath)
 	if err != nil {
@@ -98,14 +98,14 @@ func InsertVariant(product_id int, color string, stock int, price int64, imagePa
 }
 
 func DeleteVariantEntries(product_id int) {
-	_, err := db.Exec(ctx, `DELETE FROM product_variants WHERE product_id = $1`, product_id)
+	_, err := db.Exec(ctx, `DELETE FROM variants WHERE product_id = $1`, product_id)
 	if err != nil {
 		log.Printf("error deleting variants: %v\n", err)
 	}
 }
 
 func DeleteVariantEntry(variant_id int) {
-	_, err := db.Exec(ctx, `DELETE FROM product_variants WHERE id = $1`, variant_id)
+	_, err := db.Exec(ctx, `DELETE FROM variants WHERE id = $1`, variant_id)
 	if err != nil {
 		log.Printf("error deleting variants: %v\n", err)
 	}

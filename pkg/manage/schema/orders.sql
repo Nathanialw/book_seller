@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    product_variant_id INTEGER NOT NULL REFERENCES product_variants(id),
+    product_variant_id INTEGER NOT NULL REFERENCES variants(id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     price NUMERIC(10,2) NOT NULL,
     product_title TEXT NOT NULL,

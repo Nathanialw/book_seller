@@ -15,6 +15,7 @@ type Order struct {
 }
 
 type OrderItem struct {
+	ID                int
 	VariantID         int
 	Quantity          int
 	Cents             int64

@@ -80,6 +80,11 @@ func ExecuteSQL(config *Config, sqlFile, direction string) error {
 		return nil
 	}
 
+	// Verify file exists
+	if _, err := os.Stat(sqlFile); os.IsNotExist(err) {
+		return fmt.Errorf("SQL file does not exist: %s", sqlFile)
+	}
+
 	cmd := exec.Command("psql",
 		"-h", config.Database.Host,
 		"-p", config.Database.Port,
@@ -91,14 +96,18 @@ func ExecuteSQL(config *Config, sqlFile, direction string) error {
 		fmt.Sprintf("PGPASSWORD=%s", config.Database.Password),
 		fmt.Sprintf("PGSSLMODE=%s", config.Database.SSLMode))
 
+	// if verbose {
+	log.Printf("Executing: %v", cmd.Args)
+	// }
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error executing SQL: %w\nOutput: %s", err, string(output))
 	}
 
-	if verbose {
-		log.Printf("SQL execution output:\n%s", string(output))
-	}
+	// if verbose {
+	log.Printf("SQL execution output:\n%s", string(output))
+	// }
 
 	return nil
 }

@@ -12,7 +12,6 @@ import (
 )
 
 func HandleMigration(config *Config) error {
-
 	currentVersion, err := getCurrentVersion(config.Paths.ConfigFile)
 	if err != nil {
 		return fmt.Errorf("error getting current version: %w", err)
@@ -25,7 +24,8 @@ func HandleMigration(config *Config) error {
 	// Load previous state
 	prevState, err := LoadState(config.Paths.StateFile)
 	if err != nil {
-		// return fmt.Errorf("error loading previous state: %w", err)
+		log.Printf("Warning: could not load previous state: %v", err)
+		prevState = SchemaState{Tables: make(map[string][]Field)}
 	}
 
 	// Generate migrations
@@ -37,6 +37,11 @@ func HandleMigration(config *Config) error {
 	if len(forwardMigrations) == 0 && len(undoMigrations) == 0 {
 		log.Println("No schema changes detected. No migrations applied.")
 		return nil
+	}
+
+	// Ensure migration directory exists
+	if err := os.MkdirAll(config.Paths.MigrationDir, 0755); err != nil {
+		return fmt.Errorf("error creating migration directory: %w", err)
 	}
 
 	// Write migration files
@@ -52,7 +57,14 @@ func HandleMigration(config *Config) error {
 	if !dryRun {
 		for _, migration := range forwardMigrations {
 			filePath := filepath.Join(config.Paths.MigrationDir, migration.Filename)
-			log.Printf("Applying: %s", migration.Filename)
+
+			// Verify file exists before execution
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				return fmt.Errorf("migration file not found: %s (absolute path: %s)",
+					filePath, getAbsolutePath(filePath))
+			}
+
+			log.Printf("Applying: %s (absolute path: %s)", migration.Filename, getAbsolutePath(filePath))
 
 			if err := ExecuteSQL(config, filePath, "up"); err != nil {
 				return fmt.Errorf("error executing migration: %w", err)
@@ -66,16 +78,22 @@ func HandleMigration(config *Config) error {
 
 	// Update state
 	if !dryRun {
+		// Ensure history directory exists
+		if err := os.MkdirAll(config.Paths.HistoryDir, 0755); err != nil {
+			return fmt.Errorf("error creating history directory: %w", err)
+		}
+
 		// Save history snapshot
-		historyFile := filepath.Join(config.Paths.HistoryDir, fmt.Sprintf("schema_state_%s.json", prevVersionPrefix))
+		historyFile := filepath.Join(config.Paths.HistoryDir,
+			fmt.Sprintf("schema_state_%s.json", prevVersionPrefix))
 		if err := SaveState(historyFile, prevState); err != nil {
 			return fmt.Errorf("error saving history state: %w", err)
 		}
+
 		// Update current state
 		if err := SaveState(config.Paths.StateFile, newState); err != nil {
 			return fmt.Errorf("error saving current state: %w", err)
 		}
-		println(newVersion)
 
 		// Update config version
 		if err := updateConfigVersion(config.Paths.ConfigFile, newVersion); err != nil {
@@ -83,15 +101,46 @@ func HandleMigration(config *Config) error {
 		}
 	}
 
-	// Print summary
 	log.Println("\nMigration complete.")
 	log.Printf("Version %s successfully applied.", newVersionPrefix)
-	log.Println("Created:")
-	for _, m := range forwardMigrations {
-		log.Printf("  - %s", filepath.Join(config.Paths.MigrationDir, m.Filename))
+	return nil
+}
+
+// Helper function to get absolute path
+func getAbsolutePath(path string) string {
+	absPath, _ := filepath.Abs(path)
+	return absPath
+}
+
+func pluralize(name string) string {
+	lower := strings.ToLower(name)
+	if strings.HasSuffix(lower, "y") && len(lower) > 1 {
+		// Category -> categories
+		return lower[:len(lower)-1] + "ies"
 	}
-	for _, m := range undoMigrations {
-		log.Printf("  - %s", filepath.Join(config.Paths.MigrationDir, m.Filename))
+	// Just add 's' for now
+	return lower + "s"
+}
+
+func WriteMigrationFiles(migrationDir string, migrations []Migration) error {
+	if len(migrations) == 0 {
+		return nil
+	}
+
+	// Create directory if it doesn't exist
+	if err := os.MkdirAll(migrationDir, 0755); err != nil {
+		return fmt.Errorf("error creating migration directory: %w", err)
+	}
+
+	for _, migration := range migrations {
+		filePath := filepath.Join(migrationDir, migration.Filename)
+
+		// Write each migration to its own file
+		if err := os.WriteFile(filePath, []byte(migration.Content), 0644); err != nil {
+			return fmt.Errorf("error writing migration file %s: %w", filePath, err)
+		}
+
+		log.Printf("Created migration file: %s", getAbsolutePath(filePath))
 	}
 
 	return nil
@@ -224,6 +273,20 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 				isNullable = false
 			}
 
+			// Automatically set ID fields as primary keys (case-insensitive)
+			if strings.EqualFold(fieldName, "id") {
+				isPrimary = true
+				isNullable = false
+			}
+
+			// Detect automatic foreign key based on _ID naming
+			if strings.HasSuffix(strings.ToLower(fieldName), "_id") && !strings.EqualFold(fieldName, "id") {
+				isForeignKey = true
+				baseName := strings.TrimSuffix(strings.ToLower(fieldName), "_id")
+				references = fmt.Sprintf("%ss(ID)", baseName) // pluralize by adding "s"
+			}
+
+			// Parse tags if present
 			if idx := strings.Index(line, "`"); idx != -1 {
 				tagSection := line[idx+1:]
 				if endIdx := strings.Index(tagSection, "`"); endIdx != -1 {
@@ -243,7 +306,6 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 						}
 					}
 				}
-				fieldType = fieldType[:idx]
 			}
 
 			// Map Go types to SQL types
@@ -278,39 +340,6 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 	return fields, nil
 }
 
-func WriteMigrationFiles(migrationDir string, migrations []Migration) error {
-	if len(migrations) == 0 {
-		return nil
-	}
-
-	var filename string
-	for _, migration := range migrations {
-		filename = migration.Filename
-	}
-
-	// Determine the combined filename based on the first migration's version
-	version := migrations[0].Version
-	combinedFilename := fmt.Sprintf("%s", filename)
-	combinedPath := filepath.Join(migrationDir, combinedFilename)
-
-	var combinedContent bytes.Buffer
-	combinedContent.WriteString(fmt.Sprintf("-- Combined Migrations Version: %s\n", version))
-	combinedContent.WriteString("-- This file contains all migrations for this version\n\n")
-
-	// Append all migrations to the combined file
-	for _, migration := range migrations {
-		combinedContent.WriteString(migration.Content)
-		combinedContent.WriteString("\n")
-	}
-
-	// Write the combined file
-	if err := os.WriteFile(combinedPath, combinedContent.Bytes(), 0644); err != nil {
-		return fmt.Errorf("error writing combined migration file %s: %w", combinedPath, err)
-	}
-
-	return nil
-}
-
 func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) (string, string) {
 	var forwardStatements []string
 	var undoStatements []string
@@ -332,8 +361,9 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 			if f.IsForeignKey && f.References != "" {
 				parts := strings.Split(f.References, "(")
 				if len(parts) == 2 {
-					refTable := parts[0]
+					refModel := parts[0]
 					refColumn := strings.TrimSuffix(parts[1], ")")
+					refTable := pluralize(refModel) // pluralize here too
 					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, f.Name, refTable)
 					foreignKeys = append(foreignKeys,
 						fmt.Sprintf("CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
@@ -342,9 +372,9 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 			}
 		}
 
-		if len(primaryKeys) > 0 {
-			columns = append(columns, fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(primaryKeys, ", ")))
-		}
+		// if len(primaryKeys) > 0 {
+		// columns = append(columns, fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(primaryKeys, ", ")))
+		// }
 
 		columns = append(columns, foreignKeys...)
 
@@ -381,8 +411,9 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 				if cf.IsForeignKey && cf.References != "" {
 					parts := strings.Split(cf.References, "(")
 					if len(parts) == 2 {
-						refTable := parts[0]
+						refModel := parts[0]
 						refColumn := strings.TrimSuffix(parts[1], ")")
+						refTable := pluralize(refModel) // <-- apply pluralize here
 						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name, refTable)
 						forwardStatements = append(forwardStatements,
 							fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);",

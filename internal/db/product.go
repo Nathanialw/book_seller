@@ -25,7 +25,7 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 	// Then insert the variants into the product_variants table
 	for _, v := range variants {
 		sqlVariant := `
-			INSERT INTO product_variants (product_id, color, stock, price, image_path)
+			INSERT INTO variants (product_id, color, stock, price, image_path)
 			VALUES ($1, $2, $3, $4, $5)
 		`
 		_, err := db.Exec(ctx, sqlVariant, productID, v.Color, v.Stock, v.Cents, v.ImagePath)
@@ -43,7 +43,7 @@ func SearchProducts(query string) ([]models.Product, error) {
 		SELECT b.id, b.title, b.author, b.description,
 		       v.color, v.stock, v.price, v.image_path
 		FROM products b
-		LEFT JOIN product_variants v ON b.id = v.product_id
+		LEFT JOIN variants v ON b.id = v.product_id
 		WHERE b.title % $1 OR b.author % $1
 		ORDER BY GREATEST(similarity(b.title, $1), similarity(b.author, $1)) DESC,
 		         b.id, v.color
@@ -157,7 +157,7 @@ func GetAllProducts() ([]models.Product, error) {
 		SELECT b.id, b.title, b.author, b.description, 
 		       v.color, v.stock, v.price, v.image_path
 		FROM products b
-		LEFT JOIN product_variants v ON b.id = v.product_id
+		LEFT JOIN variants v ON b.id = v.product_id
 		ORDER BY b.id, v.color
 	`)
 	if err != nil {

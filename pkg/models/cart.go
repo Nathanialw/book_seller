@@ -1,11 +1,13 @@
 package models
 
 type CartItem struct {
+	ID        int
 	VariantID int
 	Quantity  int
 }
 
 type CartItems struct {
+	ID       int
 	Variant  Variant
 	Name     string
 	Quantity int
@@ -13,6 +15,7 @@ type CartItems struct {
 }
 
 type Cart struct {
+	ID       int
 	Products []CartItems
 	Subtotal float64
 	Tax      float64

@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS variants (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS trgm_idx_color ON product_variants USING GIN (color gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS trgm_idx_color ON variants USING GIN (color gin_trgm_ops);
