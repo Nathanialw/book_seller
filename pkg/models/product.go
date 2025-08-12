@@ -20,14 +20,6 @@ type Variant struct {
 	ImagePath string
 }
 
-type Test struct {
-	ID    int
-	Color string
-	Stock int
-	Cents int64
-	Price float64
-}
-
 // //size
 // Pages  string
 // Width  string
