@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS variants (
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     color TEXT NOT NULL,
     image_path TEXT NOT NULL,
-    price NUMERIC(10, 2),
+    cents NUMERIC(10, 2),
     stock INTEGER NOT NULL CHECK (stock >= 0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

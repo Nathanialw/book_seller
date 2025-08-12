@@ -11,16 +11,19 @@ type Order struct {
 	PostalCode  string
 	Country     string
 	CreatedAt   time.Time
-	Products    []OrderItem
+	//not to be  stored in db
+	Products []OrderItem
 }
 
 type OrderItem struct {
 	ID           int
-	VariantID    int
+	Order_ID     int
+	Variant_ID   int
 	Quantity     int
 	Cents        int64
-	Price        float64
 	ProductTitle string
 	VariantColor string
 	CreatedAt    time.Time
+	//not to be  stored in db
+	Price float64
 }

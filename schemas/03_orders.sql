@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
-    order_id TEXT NOT NULL,
+    order_number TEXT NOT NULL,
     email TEXT NOT NULL,
     address TEXT NOT NULL,
     city TEXT NOT NULL,
@@ -12,11 +12,12 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    product_variant_id INTEGER NOT NULL REFERENCES variants(id),
+    variant_id INTEGER NOT NULL REFERENCES variants(id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price NUMERIC(10,2) NOT NULL,
+    cents NUMERIC(10,2) NOT NULL,
     product_title TEXT NOT NULL,
     variant_color TEXT NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS trgm_idx_orders_email ON orders USING GIN (email gin_trgm_ops);

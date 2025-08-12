@@ -7,9 +7,10 @@ type Product struct {
 	Title       string
 	Author      string
 	Description string
+	CreatedAt   time.Time
+	//not to be  stored in db
 	LowestPrice float64
 	Type0       string
-	CreatedAt   time.Time
 
 	Variants []Variant
 }
@@ -18,22 +19,10 @@ type Variant struct {
 	ID         int
 	Product_ID int //`foreign:Product(ID)` //or just Product_ID
 	Color      string
-	Stock      int
-	Cents      int64
-	Price      float64
 	ImagePath  string
+	Cents      int64
+	Stock      int
 	CreatedAt  time.Time
+	//not to be  stored in db
+	Price float64
 }
-
-// //size
-// Pages  string
-// Width  string
-// Height string
-// Length string
-
-// //materials
-// Cover string
-// Paper string
-
-// //process
-// Binding string
