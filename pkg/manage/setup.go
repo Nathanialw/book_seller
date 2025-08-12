@@ -5,6 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -18,29 +23,87 @@ func Setup(config *migrations.Config) error {
 	if err := setupDatabase(ctx, *config); err != nil {
 		return fmt.Errorf("database setup failed: %w", err)
 	}
+
+	// After database is created, execute schema files
+	if err := executeSchemaFiles(ctx, *config); err != nil {
+		return fmt.Errorf("schema execution failed: %w", err)
+	}
+
 	log.Println("✅ All setup completed successfully")
 	return nil
 }
 
+func executeSchemaFiles(ctx context.Context, config migrations.Config) error {
+	appDB, err := getPostgresConnection(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to connect to application database: %w", err)
+	}
+	defer appDB.Close()
+
+	//TODO:
+	//save schemaDir in a config file
+	schemaDir := "schemas"
+	files, err := os.ReadDir(schemaDir)
+	if err != nil {
+		return fmt.Errorf("failed to read schema directory: %w", err)
+	}
+
+	// Sort files by name to ensure proper order
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".sql") {
+			content, err := os.ReadFile(filepath.Join(schemaDir, file.Name()))
+			if err != nil {
+				return fmt.Errorf("failed to read schema file %s: %w", file.Name(), err)
+			}
+
+			log.Printf("🔧 Executing schema file: %s", file.Name())
+			if _, err := appDB.ExecContext(ctx, string(content)); err != nil {
+				return fmt.Errorf("failed to execute schema file %s: %w", file.Name(), err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func getPostgresConnection(ctx context.Context, config migrations.Config) (*sql.DB, error) {
+	port, _ := strconv.Atoi(config.Database.Port) // default
+
 	attempts := []string{
-		"user=postgres host=/var/run/postgresql sslmode=disable",
-		fmt.Sprintf("user=postgres host=%s port=%d sslmode=disable",
-			config.Database.Host, config.Database.Port),
+		// Try with password and all parameters first
+		fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=%s",
+			config.Database.User,
+			config.Database.Password,
+			config.Database.Host,
+			port,
+			config.Database.Name,
+			config.Database.SSLMode),
+
+		// Fallback to socket connection if host is local
+		fmt.Sprintf("user=%s host=/var/run/postgresql dbname=%s sslmode=disable",
+			config.Database.User,
+			config.Database.Name),
 	}
 
 	for _, dsn := range attempts {
-		db, err := sql.Open("postgres", dsn)
+		db, err := sql.Open("postgres", dsn) // Note: "postgres" driver, not "eccomerce"
 		if err != nil {
+			log.Printf("Connection attempt failed with DSN %q: %v", dsn, err)
 			continue
 		}
 
+		// Verify connection works
 		if err := db.PingContext(ctx); err == nil {
 			return db, nil
 		}
+		log.Printf("Ping failed with DSN %q: %v", dsn, err)
 		db.Close()
 	}
-	return nil, fmt.Errorf("could not connect to PostgreSQL")
+	return nil, fmt.Errorf("could not connect to PostgreSQL after %d attempts", len(attempts))
 }
 
 func setupDatabase(ctx context.Context, config migrations.Config) error {
