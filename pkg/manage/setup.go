@@ -46,7 +46,7 @@ func executeSchemaFiles(ctx context.Context, config migrations.Config) error {
 	// Get the path to the schema directory relative to this source file
 	_, filename, _, _ := runtime.Caller(0) // Gets path to current file
 	dir := filepath.Dir(filename)
-	schemaDir := filepath.Join(dir, "schemas")
+	schemaDir := filepath.Join(dir, "../../schemas")
 
 	files, err := os.ReadDir(schemaDir)
 	if err != nil {
