@@ -1,0 +1,28 @@
+{
+  "database": {
+    "host": "localhost",
+    "name": "ecommerce",
+    "password": "securepassword",
+    "port": "5432",
+    "sslmode": "disable",
+    "user": "admin"
+  },
+  "paths": {
+    "archived_dir": "./migrations/archived",
+    "config_file": "config.json",
+    "history_dir": "./migrations/history",
+    "migration_dir": "./migrations",
+    "model_dir": "./pkg/models",
+    "state_file": "./migrations/schema_state.json"
+  },
+  "settings": {
+    "ignored_structs": [
+      "EmbeddedStruct",
+      "BaseModel"
+    ],
+    "migration_file": "migrations.sql",
+    "table_naming": "snake_case_plural",
+    "version_prefix_length": 5
+  },
+  "version": 3
+}

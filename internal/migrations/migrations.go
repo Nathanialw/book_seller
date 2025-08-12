@@ -12,6 +12,7 @@ import (
 )
 
 func HandleMigration(config *Config) error {
+
 	currentVersion, err := getCurrentVersion(config.Paths.ConfigFile)
 	if err != nil {
 		return fmt.Errorf("error getting current version: %w", err)
@@ -21,12 +22,6 @@ func HandleMigration(config *Config) error {
 	prevVersionPrefix := fmt.Sprintf("%0*d", config.Settings.VersionPrefixLength, currentVersion)
 	newVersionPrefix := fmt.Sprintf("%0*d", config.Settings.VersionPrefixLength, newVersion)
 
-	// Load model configurations
-	modelConfigs, err := ParseModelConfigs(config.Paths.ConfigFile)
-	if err != nil {
-		return fmt.Errorf("error parsing model configs: %w", err)
-	}
-
 	// Load previous state
 	prevState, err := LoadState(config.Paths.StateFile)
 	if err != nil {
@@ -34,7 +29,7 @@ func HandleMigration(config *Config) error {
 	}
 
 	// Generate migrations
-	forwardMigrations, undoMigrations, newState, err := GenerateMigrations(config, modelConfigs, prevState, newVersionPrefix, prevVersionPrefix)
+	forwardMigrations, undoMigrations, newState, err := GenerateMigrations(config, prevState, newVersionPrefix)
 	if err != nil {
 		return fmt.Errorf("error generating migrations: %w", err)
 	}
@@ -102,50 +97,45 @@ func HandleMigration(config *Config) error {
 	return nil
 }
 
-func GenerateMigrations(config *Config, modelConfigs []ModelConfig, prevState SchemaState, versionPrefix, prevVersionPrefix string) ([]Migration, []Migration, SchemaState, error) {
-	var forwardMigrations []Migration
-	var undoMigrations []Migration
+func GenerateMigrations(config *Config, prevState SchemaState, versionPrefix string) ([]Migration, []Migration, SchemaState, error) {
+	modelConfigs, err := FindModels(config.Paths.ModelDir, config.Settings.IgnoredStructs, config.Settings.TableNaming)
+	if err != nil {
+		return nil, nil, SchemaState{}, fmt.Errorf("error finding models: %w", err)
+	}
+
 	newState := SchemaState{
 		Meta:   prevState.Meta,
 		Tables: make(map[string][]Field),
 	}
 
+	var allForwardSQL strings.Builder
+	var allUndoSQL strings.Builder
 	changesDetected := false
 
 	for _, model := range modelConfigs {
 		goFilePath := filepath.Join(config.Paths.ModelDir, model.GoFile)
 		currentFields, err := ParseStructFields(goFilePath, model.StructName)
-
 		if err != nil {
-			return nil, nil, SchemaState{}, fmt.Errorf("error parsing struct fields: %w", err)
+			return nil, nil, SchemaState{}, fmt.Errorf("error parsing struct fields for %s: %w", model.StructName, err)
 		}
 
 		prevFields := prevState.Tables[model.TableName]
-
-		// Generate SQL statements
 		forwardSQL, undoSQL := GenerateSQLStatements(model.TableName, currentFields, prevFields)
 
 		if forwardSQL != "" || undoSQL != "" {
 			changesDetected = true
 
-			// Create forward migration
-			if forwardSQL != "" {
-				forwardMigrations = append(forwardMigrations, Migration{
-					Version:  versionPrefix,
-					Filename: fmt.Sprintf("%s_%s", versionPrefix, model.OutFile),
-					Content:  fmt.Sprintf("%s", forwardSQL),
-				})
+			// Add separator comments between table migrations
+			if allForwardSQL.Len() > 0 {
+				allForwardSQL.WriteString("\n\n")
+				allUndoSQL.WriteString("\n\n")
 			}
 
-			// Create undo migration
-			if undoSQL != "" {
-				undoFilename := fmt.Sprintf("%s_%s_undo.sql", versionPrefix, strings.TrimSuffix(model.OutFile, ".sql"))
-				undoMigrations = append(undoMigrations, Migration{
-					Version:  versionPrefix,
-					Filename: undoFilename,
-					Content:  fmt.Sprintf("%s", undoSQL),
-				})
-			}
+			allForwardSQL.WriteString(fmt.Sprintf("-- Migration for table: %s\n", model.TableName))
+			allForwardSQL.WriteString(forwardSQL)
+
+			allUndoSQL.WriteString(fmt.Sprintf("-- Undo migration for table: %s\n", model.TableName))
+			allUndoSQL.WriteString(undoSQL)
 		}
 
 		// Update new state
@@ -155,8 +145,22 @@ func GenerateMigrations(config *Config, modelConfigs []ModelConfig, prevState Sc
 	if !changesDetected {
 		return nil, nil, SchemaState{}, nil
 	}
-	for _, v := range forwardMigrations {
-		println("forwardStatements: ", v.Content)
+
+	// Create single migration files for this version
+	forwardMigrations := []Migration{
+		{
+			Version:  versionPrefix,
+			Filename: fmt.Sprintf("%s_%s", versionPrefix, config.Settings.MigrationFile),
+			Content:  allForwardSQL.String(),
+		},
+	}
+
+	undoMigrations := []Migration{
+		{
+			Version:  versionPrefix,
+			Filename: fmt.Sprintf("%s_undo_%s", versionPrefix, config.Settings.MigrationFile),
+			Content:  allUndoSQL.String(),
+		},
 	}
 
 	return forwardMigrations, undoMigrations, newState, nil
@@ -195,7 +199,6 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 		if inStruct {
 			// Skip embedded structs
 			if strings.Contains(line, ".") {
-				println(line, " is an embedded struct")
 				continue
 			}
 
@@ -208,21 +211,62 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 			fieldName := parts[0]
 			fieldType := parts[1]
 
-			// Strip tags
-			if idx := strings.Index(fieldType, "`"); idx != -1 {
-				fieldType = fieldType[:idx]
+			// Parse tags
+			var isPrimary bool
+			var isNullable bool = true
+			var defaultValue string
+			var isForeignKey bool
+			var references string
+
+			// Automatically set ID fields as primary keys (case-insensitive)
+			if strings.EqualFold(fieldName, "id") {
+				isPrimary = true
+				isNullable = false
 			}
-			if idx := strings.Index(fieldType, "//"); idx != -1 {
+
+			if idx := strings.Index(line, "`"); idx != -1 {
+				tagSection := line[idx+1:]
+				if endIdx := strings.Index(tagSection, "`"); endIdx != -1 {
+					tagSection = tagSection[:endIdx]
+					tags := strings.Split(tagSection, " ")
+					for _, tag := range tags {
+						if strings.Contains(tag, "primary") {
+							isPrimary = true
+							isNullable = false
+						}
+						if strings.Contains(tag, "default:") {
+							defaultValue = strings.TrimPrefix(tag, "default:")
+						}
+						if strings.Contains(tag, "foreign:") {
+							isForeignKey = true
+							references = strings.TrimPrefix(tag, "foreign:")
+						}
+					}
+				}
 				fieldType = fieldType[:idx]
 			}
 
 			// Map Go types to SQL types
 			sqlType := goTypeToSQL(fieldType)
+			if !isNullable && !isPrimary {
+				sqlType += " NOT NULL"
+			}
+			if isPrimary {
+				sqlType += " PRIMARY KEY"
+			}
+			if defaultValue != "" {
+				sqlType += " DEFAULT " + defaultValue
+			}
 
 			fields = append(fields, Field{
-				Name:    fieldName,
-				GoType:  fieldType,
-				SQLType: sqlType,
+				Name:         fieldName,
+				GoType:       fieldType,
+				SQLType:      sqlType,
+				IsPrimary:    isPrimary,
+				IsNullable:   isNullable,
+				Default:      defaultValue,
+				IsForeignKey: isForeignKey,
+				References:   references,
 			})
 		}
 	}
@@ -271,40 +315,131 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 	var forwardStatements []string
 	var undoStatements []string
 
-	currentMap := make(map[string]Field)
-	prevMap := make(map[string]Field)
+	// If no previous fields, this is a new table
+	if len(prevFields) == 0 {
+		// Create table statement
+		columns := make([]string, 0, len(currentFields))
+		primaryKeys := make([]string, 0)
+		foreignKeys := make([]string, 0)
 
-	for _, f := range currentFields {
-		currentMap[strings.ToLower(f.Name)] = f
-	}
+		for _, f := range currentFields {
+			columnDef := fmt.Sprintf("%s %s", f.Name, f.SQLType)
+			if f.IsPrimary {
+				primaryKeys = append(primaryKeys, f.Name)
+			}
+			columns = append(columns, columnDef)
 
-	for _, f := range prevFields {
-		prevMap[strings.ToLower(f.Name)] = f
-	}
-
-	// Added or changed fields
-	for _, cf := range currentFields {
-		cfLower := strings.ToLower(cf.Name)
-		pf, exists := prevMap[cfLower]
-
-		if !exists {
-			// Field added
-			forwardStatements = append(forwardStatements, fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s;", tableName, cf.Name, cf.SQLType))
-			undoStatements = append(undoStatements, fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS %s CASCADE;", tableName, cf.Name))
-		} else if cf.SQLType != pf.SQLType {
-			// Field type changed
-			forwardStatements = append(forwardStatements, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;", tableName, cf.Name, cf.SQLType, cf.Name, cf.SQLType))
-			undoStatements = append(undoStatements, fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;", tableName, cf.Name, pf.SQLType, cf.Name, pf.SQLType))
+			if f.IsForeignKey && f.References != "" {
+				parts := strings.Split(f.References, "(")
+				if len(parts) == 2 {
+					refTable := parts[0]
+					refColumn := strings.TrimSuffix(parts[1], ")")
+					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, f.Name, refTable)
+					foreignKeys = append(foreignKeys,
+						fmt.Sprintf("CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
+							fkName, f.Name, refTable, refColumn))
+				}
+			}
 		}
-	}
 
-	// Removed fields
-	for _, pf := range prevFields {
-		pfLower := strings.ToLower(pf.Name)
-		if _, exists := currentMap[pfLower]; !exists {
-			// Field removed
-			forwardStatements = append(forwardStatements, fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS %s CASCADE;", tableName, pf.Name))
-			undoStatements = append(undoStatements, fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s;", tableName, pf.Name, pf.SQLType))
+		if len(primaryKeys) > 0 {
+			columns = append(columns, fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(primaryKeys, ", ")))
+		}
+
+		columns = append(columns, foreignKeys...)
+
+		forwardStatements = append(forwardStatements,
+			fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n\t%s\n);", tableName, strings.Join(columns, ",\n\t")))
+
+		// Undo would drop the table
+		undoStatements = append(undoStatements, fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", tableName))
+	} else {
+		// Existing table modification logic
+		currentMap := make(map[string]Field)
+		prevMap := make(map[string]Field)
+
+		for _, f := range currentFields {
+			currentMap[strings.ToLower(f.Name)] = f
+		}
+
+		for _, f := range prevFields {
+			prevMap[strings.ToLower(f.Name)] = f
+		}
+
+		// Added or changed fields
+		for _, cf := range currentFields {
+			cfLower := strings.ToLower(cf.Name)
+			pf, exists := prevMap[cfLower]
+
+			if !exists {
+				// Add new column
+				forwardStatements = append(forwardStatements,
+					fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s;",
+						tableName, cf.Name, cf.SQLType))
+
+				// Add foreign key constraint if needed
+				if cf.IsForeignKey && cf.References != "" {
+					parts := strings.Split(cf.References, "(")
+					if len(parts) == 2 {
+						refTable := parts[0]
+						refColumn := strings.TrimSuffix(parts[1], ")")
+						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name, refTable)
+						forwardStatements = append(forwardStatements,
+							fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);",
+								tableName, fkName, cf.Name, refTable, refColumn))
+					}
+				}
+
+				undoStatements = append(undoStatements,
+					fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS %s CASCADE;",
+						tableName, cf.Name))
+			} else if cf.SQLType != pf.SQLType || cf.IsForeignKey != pf.IsForeignKey || cf.References != pf.References {
+				// Handle type changes or foreign key changes
+				if cf.SQLType != pf.SQLType {
+					forwardStatements = append(forwardStatements,
+						fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;",
+							tableName, cf.Name, cf.SQLType, cf.Name, cf.SQLType))
+				}
+
+				// Handle foreign key changes
+				if pf.IsForeignKey {
+					// Drop old foreign key if it exists
+					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name,
+						strings.Split(pf.References, "(")[0])
+					forwardStatements = append(forwardStatements,
+						fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s;",
+							tableName, fkName))
+				}
+
+				if cf.IsForeignKey && cf.References != "" {
+					parts := strings.Split(cf.References, "(")
+					if len(parts) == 2 {
+						refTable := parts[0]
+						refColumn := strings.TrimSuffix(parts[1], ")")
+						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name, refTable)
+						forwardStatements = append(forwardStatements,
+							fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);",
+								tableName, fkName, cf.Name, refTable, refColumn))
+					}
+				}
+
+				undoStatements = append(undoStatements,
+					fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;",
+						tableName, cf.Name, pf.SQLType, cf.Name, pf.SQLType))
+			}
+		}
+
+		// Removed fields
+		for _, pf := range prevFields {
+			pfLower := strings.ToLower(pf.Name)
+			if _, exists := currentMap[pfLower]; !exists {
+				forwardStatements = append(forwardStatements,
+					fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS %s CASCADE;",
+						tableName, pf.Name))
+				undoStatements = append(undoStatements,
+					fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s;",
+						tableName, pf.Name, pf.SQLType))
+			}
 		}
 	}
 

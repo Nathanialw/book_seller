@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -71,10 +73,15 @@ func ParseModelConfigs(configFile string) ([]ModelConfig, error) {
 
 	var configs []ModelConfig
 	for _, model := range cfg.Models {
+		tableName := model.TableName
+		if tableName == "" {
+			tableName = structToTableName(model.StructName)
+		}
+
 		configs = append(configs, ModelConfig{
 			GoFile:     model.GoFile,
 			StructName: model.StructName,
-			TableName:  model.TableName,
+			TableName:  tableName,
 			OutFile:    model.OutFile,
 		})
 	}
@@ -170,4 +177,22 @@ func determineTargetVersion(currentVersion int) (int, error) {
 	}
 
 	return target, nil
+}
+
+func structToTableName(structName string) string {
+	// Convert camelCase to snake_case and pluralize
+	var result []rune
+	for i, r := range structName {
+		if unicode.IsUpper(r) && i > 0 {
+			result = append(result, '_')
+		}
+		result = append(result, unicode.ToLower(r))
+	}
+	tableName := string(result)
+
+	// Basic pluralization
+	if !strings.HasSuffix(tableName, "s") {
+		tableName += "s"
+	}
+	return tableName
 }
