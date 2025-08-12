@@ -30,6 +30,7 @@ func HandleMigration(config *Config) error {
 
 	// Generate migrations
 	forwardMigrations, undoMigrations, newState, err := GenerateMigrations(config, prevState, newVersionPrefix)
+
 	if err != nil {
 		return fmt.Errorf("error generating migrations: %w", err)
 	}
@@ -164,6 +165,7 @@ func GenerateMigrations(config *Config, prevState SchemaState, versionPrefix str
 	for _, model := range modelConfigs {
 		goFilePath := filepath.Join(config.Paths.ModelDir, model.GoFile)
 		currentFields, err := ParseStructFields(goFilePath, model.StructName)
+
 		if err != nil {
 			return nil, nil, SchemaState{}, fmt.Errorf("error parsing struct fields for %s: %w", model.StructName, err)
 		}
@@ -246,11 +248,6 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 		}
 
 		if inStruct {
-			// Skip embedded structs
-			if strings.Contains(line, ".") {
-				continue
-			}
-
 			// Parse field name and type
 			parts := strings.Fields(line)
 			if len(parts) < 2 {
@@ -266,12 +263,6 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 			var defaultValue string
 			var isForeignKey bool
 			var references string
-
-			// Automatically set ID fields as primary keys (case-insensitive)
-			if strings.EqualFold(fieldName, "id") {
-				isPrimary = true
-				isNullable = false
-			}
 
 			// Automatically set ID fields as primary keys (case-insensitive)
 			if strings.EqualFold(fieldName, "id") {
@@ -310,6 +301,10 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 
 			// Map Go types to SQL types
 			sqlType := goTypeToSQL(fieldType)
+			if sqlType == "NONE" {
+				fmt.Printf("%s skipped\n", fieldType)
+				continue
+			}
 			if !isNullable && !isPrimary {
 				sqlType += " NOT NULL"
 			}
@@ -319,6 +314,8 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 			if defaultValue != "" {
 				sqlType += " DEFAULT " + defaultValue
 			}
+
+			fieldName = toSnakeCase(fieldName)
 
 			fields = append(fields, Field{
 				Name:         fieldName,
@@ -330,6 +327,7 @@ func ParseStructFields(goFilePath, structName string) ([]Field, error) {
 				IsForeignKey: isForeignKey,
 				References:   references,
 			})
+
 		}
 	}
 
@@ -379,10 +377,6 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 			}
 		}
 
-		// if len(primaryKeys) > 0 {
-		// columns = append(columns, fmt.Sprintf("PRIMARY KEY (%s)", strings.Join(primaryKeys, ", ")))
-		// }
-
 		columns = append(columns, foreignKeys...)
 
 		forwardStatements = append(forwardStatements,
@@ -396,16 +390,16 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 		prevMap := make(map[string]Field)
 
 		for _, f := range currentFields {
-			currentMap[toSnakeCase(f.Name)] = f
+			currentMap[f.Name] = f
 		}
 
 		for _, f := range prevFields {
-			prevMap[toSnakeCase(f.Name)] = f
+			prevMap[f.Name] = f
 		}
 
 		// Added or changed fields
 		for _, cf := range currentFields {
-			cfSnake := toSnakeCase(cf.Name)
+			cfSnake := cf.Name
 			pf, exists := prevMap[cfSnake]
 
 			if !exists {

@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Product struct {
 	ID          int
 	Title       string
@@ -7,6 +9,7 @@ type Product struct {
 	Description string
 	LowestPrice float64
 	Type0       string
+	CreatedAt   time.Time
 
 	Variants []Variant
 }
@@ -19,6 +22,7 @@ type Variant struct {
 	Cents      int64
 	Price      float64
 	ImagePath  string
+	CreatedAt  time.Time
 }
 
 // //size

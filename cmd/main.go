@@ -8,7 +8,7 @@ import (
 func main() {
 	// manage.Run()
 	config, _ := manage.Init()
-	manage.Setup(config)
+	// manage.Setup(config)
 
 	migrations.Migrate(config)
 

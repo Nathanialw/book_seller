@@ -90,7 +90,13 @@ func ParseModelConfigs(configFile string) ([]ModelConfig, error) {
 }
 
 func goTypeToSQL(goType string) string {
-	switch goType {
+	// Remove any package qualifiers (like "time.")
+	baseType := goType
+	// if lastDot := strings.LastIndex(goType, "."); lastDot != -1 {
+	// 	baseType = goType[lastDot+1:]
+	// }
+
+	switch baseType {
 	case "string":
 		return "VARCHAR"
 	case "int", "int32", "int64":
@@ -102,12 +108,11 @@ func goTypeToSQL(goType string) string {
 	case "bool":
 		return "BOOLEAN"
 	case "time.Time":
-		return "TIMESTAMP"
+		return "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
 	default:
-		return "TEXT"
+		return "NONE"
 	}
 }
-
 func getCurrentVersion(configFile string) (int, error) {
 	data, err := os.ReadFile(configFile)
 	if err != nil {

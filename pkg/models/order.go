@@ -15,13 +15,12 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID                int
-	VariantID         int
-	Quantity          int
-	Cents             int64
-	Price             float64
-	ProductTitle      string
-	ProductTitles     string
-	ProductTitlessasd string
-	VariantColor      string
+	ID           int
+	VariantID    int
+	Quantity     int
+	Cents        int64
+	Price        float64
+	ProductTitle string
+	VariantColor string
+	CreatedAt    time.Time
 }

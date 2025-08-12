@@ -27,9 +27,9 @@ export STRIPE_SECRET_KEY=""
 export STRIPE_WEBHOOK_SECRET=whsec_r0GWLTEK7q30FGpbvS9gjDcdge5T7tQq
 
 export STRIPE_SECRET_KEY="
-sk_test_51Rqloa2NPGaRjqznMlW
-WfnEOjGc0DqPYQFljizqSPpLsLdKZczEamoQ7BEaatctSEndQ2kmekYW0d
-g9Hx11MOUiy006jrs55W6"
+sk_test_51Rqloa2NPGaRjqznMlWWfnEOjGc0DqP
+YQFljizqSPpLsLdKZczEamoQ7BEaatctSEndQ2kmekYW0dg9Hx11M
+OUiy006jrs55W6"
 
 deploy/setup-postgres.ps1
 windows postgres login: walton13
