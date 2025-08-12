@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,7 +43,11 @@ func executeSchemaFiles(ctx context.Context, config migrations.Config) error {
 
 	//TODO:
 	//save schemaDir in a config file
-	schemaDir := "schemas"
+	// Get the path to the schema directory relative to this source file
+	_, filename, _, _ := runtime.Caller(0) // Gets path to current file
+	dir := filepath.Dir(filename)
+	schemaDir := filepath.Join(dir, "schemas")
+
 	files, err := os.ReadDir(schemaDir)
 	if err != nil {
 		return fmt.Errorf("failed to read schema directory: %w", err)
