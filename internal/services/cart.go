@@ -8,18 +8,18 @@ import (
 	"github.com/nathanialw/ecommerce/pkg/models"
 )
 
-func GetCartItems(r *http.Request) ([]models.CartItems, float64) {
+func GetCartItems(r *http.Request) ([]models.CartItem, float64) {
 	session, _ := db.Store.Get(r, "session")
 	cartAny := session.Values["cart"]
 	cart, _ := cartAny.([]models.CartItem)
 
 	var total float64
-	var products []models.CartItems
+	var products []models.CartItem
 	for _, item := range cart {
-		variant, err := db.GetVariantByID(item.VariantID)
+		variant, err := db.GetVariantByID(item.Variant_ID)
 		product, _ := db.GetProductByID(variant.ID)
 		if err == nil {
-			products = append(products, models.CartItems{
+			products = append(products, models.CartItem{
 				Variant:  variant,
 				Quantity: item.Quantity,
 				Total:    variant.Price * float64(item.Quantity),

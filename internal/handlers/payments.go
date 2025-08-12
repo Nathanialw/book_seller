@@ -213,7 +213,7 @@ func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		for _, li := range fullSess.LineItems.Data {
 			variantID, _ := strconv.Atoi(li.Price.Product.Metadata["variant_id"])
 			items = append(items, models.OrderItem{
-				VariantID:    variantID,
+				Variant_ID:   variantID,
 				Quantity:     int(li.Quantity),
 				Cents:        li.Price.UnitAmount,
 				ProductTitle: li.Price.Product.Name,

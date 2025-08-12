@@ -13,7 +13,7 @@ func SearchOrders(email string, orderNumber string) (models.Order, error) {
 	var order models.Order
 
 	row := db.QueryRow(ctx, `
-        SELECT id, order_id, email, address, city, postal_code, country, created_at
+        SELECT id, order_number, email, address, city, postal_code, country, created_at
         FROM orders
     	WHERE email = $1 AND order_id = $2
         LIMIT 1
@@ -34,7 +34,7 @@ func SearchOrders(email string, orderNumber string) (models.Order, error) {
 	}
 	// Get the order items
 	rows, err := db.Query(ctx, `
-        SELECT product_variant_id, quantity, price, product_title, variant_color 
+        SELECT variant_id, quantity, price, product_title, variant_color 
         FROM order_items
     	WHERE order_id = $1
     `, order.ID)
@@ -46,7 +46,7 @@ func SearchOrders(email string, orderNumber string) (models.Order, error) {
 	for rows.Next() {
 		var item models.OrderItem
 		err := rows.Scan(
-			&item.VariantID,
+			&item.Variant_ID,
 			&item.Quantity,
 			&item.Cents,
 			&item.ProductTitle,
@@ -88,8 +88,8 @@ func InsertOrder(orderNumber, email, address, city, postalCode, country string, 
 
 	for _, item := range items {
 		_, err = tx.Exec(ctx,
-			`INSERT INTO order_items (order_id, product_variant_id, quantity, price, product_title, variant_color) VALUES ($1, $2, $3, $4, $5, $6)`,
-			orderID, item.VariantID, item.Quantity, item.Cents, item.ProductTitle, item.VariantColor,
+			`INSERT INTO order_items (order_id, variant_id, quantity, price, product_title, variant_color) VALUES ($1, $2, $3, $4, $5, $6)`,
+			orderID, item.Variant_ID, item.Quantity, item.Cents, item.ProductTitle, item.VariantColor,
 		)
 		if err != nil {
 			log.Printf("3Failed to create order: %v", err)

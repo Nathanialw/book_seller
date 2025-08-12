@@ -34,7 +34,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if variant already in cart
 	found := false
 	for i, item := range cart {
-		if item.VariantID == id {
+		if item.Variant_ID == id {
 			cart[i].Quantity++
 			found = true
 			break
@@ -42,7 +42,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		cart = append(cart, models.CartItem{VariantID: id, Quantity: 1})
+		cart = append(cart, models.CartItem{Variant_ID: id, Quantity: 1})
 	}
 
 	session.Values["cart"] = cart
@@ -93,7 +93,7 @@ func IncrementItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Correctly increment quantity by index
 	for i := range cart {
-		if cart[i].VariantID == id {
+		if cart[i].Variant_ID == id {
 			// TODO: Check against in stock in the db
 			cart[i].Quantity++
 			break
@@ -124,7 +124,7 @@ func DecrementItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decrement quantity or remove item entirely
 	for i := range cart {
-		if cart[i].VariantID == id {
+		if cart[i].Variant_ID == id {
 			if cart[i].Quantity > 1 {
 				cart[i].Quantity--
 			} else {
@@ -159,7 +159,7 @@ func RemoveItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decrement quantity or remove item entirely
 	for i := range cart {
-		if cart[i].VariantID == id {
+		if cart[i].Variant_ID == id {
 			cart = append(cart[:i], cart[i+1:]...)
 			break
 		}

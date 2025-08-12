@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     cents NUMERIC(10,2) NOT NULL,
     product_title TEXT NOT NULL,
-    variant_color TEXT NOT NULL
+    variant_color TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

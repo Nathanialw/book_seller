@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/nathanialw/ecommerce/pkg/manage"
+	"github.com/nathanialw/ecommerce/pkg/migrations"
 )
 
 func main() {
@@ -13,10 +14,10 @@ func main() {
 		log.Fatalf("Initialization failed: %v", err)
 	}
 
-	if err := manage.Setup(config); err != nil {
-		log.Fatalf("Setup failed: %v", err)
-	}
+	// if err := manage.Setup(config); err != nil {
+	// 	log.Fatalf("Setup failed: %v", err)
+	// }
 
-	// migrations.Migrate(config)
+	migrations.Migrate(config)
 
 }
