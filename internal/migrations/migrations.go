@@ -348,14 +348,19 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 	if len(prevFields) == 0 {
 		// Create table statement
 		columns := make([]string, 0, len(currentFields))
-		primaryKeys := make([]string, 0)
 		foreignKeys := make([]string, 0)
 
 		for _, f := range currentFields {
-			columnDef := fmt.Sprintf("%s %s", f.Name, f.SQLType)
-			if f.IsPrimary {
-				primaryKeys = append(primaryKeys, f.Name)
+			var columnDef string
+
+			// Detect if this is the "ID" primary key field with int type
+			if f.IsPrimary && (f.GoType == "int" || f.GoType == "int64") {
+				// Use SERIAL (auto-increment integer) for ID primary key
+				columnDef = fmt.Sprintf("%s SERIAL PRIMARY KEY", f.Name)
+			} else {
+				columnDef = fmt.Sprintf("%s %s", f.Name, f.SQLType)
 			}
+
 			columns = append(columns, columnDef)
 
 			if f.IsForeignKey && f.References != "" {
