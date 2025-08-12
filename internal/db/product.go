@@ -22,7 +22,7 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 		return err
 	}
 
-	// Then insert the variants into the product_variants table
+	// Then insert the variants into the variants table
 	for _, v := range variants {
 		sqlVariant := `
 			INSERT INTO variants (product_id, color, stock, price, image_path)
@@ -152,7 +152,7 @@ func UpdateProductByID(id int, title, author, desc string) error {
 }
 
 func GetAllProducts() ([]models.Product, error) {
-	// Query to join product with product_variants
+	// Query to join product with variants
 	rows, err := db.Query(context.Background(), `
 		SELECT b.id, b.title, b.author, b.description, 
 		       v.color, v.stock, v.price, v.image_path

@@ -184,11 +184,19 @@ func generateTableName(structName, namingConvention string) string {
 // toSnakeCase converts CamelCase to snake_case
 func toSnakeCase(s string) string {
 	var result []rune
+	prevLowerOrDigit := false
+
 	for i, r := range s {
-		if unicode.IsUpper(r) && i > 0 {
-			result = append(result, '_')
+		if unicode.IsUpper(r) {
+			if i > 0 && prevLowerOrDigit {
+				result = append(result, '_')
+			}
+			result = append(result, unicode.ToLower(r))
+			prevLowerOrDigit = false
+		} else {
+			result = append(result, r)
+			prevLowerOrDigit = unicode.IsLower(r) || unicode.IsDigit(r)
 		}
-		result = append(result, unicode.ToLower(r))
 	}
 	return string(result)
 }

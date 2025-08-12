@@ -352,13 +352,14 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 
 		for _, f := range currentFields {
 			var columnDef string
+			columnName := toSnakeCase(f.Name)
 
 			// Detect if this is the "ID" primary key field with int type
 			if f.IsPrimary && (f.GoType == "int" || f.GoType == "int64") {
 				// Use SERIAL (auto-increment integer) for ID primary key
-				columnDef = fmt.Sprintf("%s SERIAL PRIMARY KEY", f.Name)
+				columnDef = fmt.Sprintf("%s SERIAL PRIMARY KEY", columnName)
 			} else {
-				columnDef = fmt.Sprintf("%s %s", f.Name, f.SQLType)
+				columnDef = fmt.Sprintf("%s %s", columnName, f.SQLType)
 			}
 
 			columns = append(columns, columnDef)
@@ -368,11 +369,12 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 				if len(parts) == 2 {
 					refModel := parts[0]
 					refColumn := strings.TrimSuffix(parts[1], ")")
+					println(refColumn)
 					refTable := pluralize(refModel) // pluralize here too
-					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, f.Name, refTable)
+					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, columnName, refTable)
 					foreignKeys = append(foreignKeys,
 						fmt.Sprintf("CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s)",
-							fkName, f.Name, refTable, refColumn))
+							fkName, columnName, refTable, refColumn))
 				}
 			}
 		}
@@ -394,23 +396,23 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 		prevMap := make(map[string]Field)
 
 		for _, f := range currentFields {
-			currentMap[strings.ToLower(f.Name)] = f
+			currentMap[toSnakeCase(f.Name)] = f
 		}
 
 		for _, f := range prevFields {
-			prevMap[strings.ToLower(f.Name)] = f
+			prevMap[toSnakeCase(f.Name)] = f
 		}
 
 		// Added or changed fields
 		for _, cf := range currentFields {
-			cfLower := strings.ToLower(cf.Name)
-			pf, exists := prevMap[cfLower]
+			cfSnake := toSnakeCase(cf.Name)
+			pf, exists := prevMap[cfSnake]
 
 			if !exists {
 				// Add new column
 				forwardStatements = append(forwardStatements,
 					fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s;",
-						tableName, cf.Name, cf.SQLType))
+						tableName, cfSnake, cf.SQLType))
 
 				// Add foreign key constraint if needed
 				if cf.IsForeignKey && cf.References != "" {
@@ -418,29 +420,30 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 					if len(parts) == 2 {
 						refModel := parts[0]
 						refColumn := strings.TrimSuffix(parts[1], ")")
+						println(refColumn)
 						refTable := pluralize(refModel) // <-- apply pluralize here
-						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name, refTable)
+						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cfSnake, refTable)
 						forwardStatements = append(forwardStatements,
 							fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);",
-								tableName, fkName, cf.Name, refTable, refColumn))
+								tableName, fkName, cfSnake, refTable, refColumn))
 					}
 				}
 
 				undoStatements = append(undoStatements,
 					fmt.Sprintf("ALTER TABLE %s DROP COLUMN IF EXISTS %s CASCADE;",
-						tableName, cf.Name))
+						tableName, cfSnake))
 			} else if cf.SQLType != pf.SQLType || cf.IsForeignKey != pf.IsForeignKey || cf.References != pf.References {
 				// Handle type changes or foreign key changes
 				if cf.SQLType != pf.SQLType {
 					forwardStatements = append(forwardStatements,
 						fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;",
-							tableName, cf.Name, cf.SQLType, cf.Name, cf.SQLType))
+							tableName, cfSnake, cf.SQLType, cfSnake, cf.SQLType))
 				}
 
 				// Handle foreign key changes
 				if pf.IsForeignKey {
 					// Drop old foreign key if it exists
-					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name,
+					fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cfSnake,
 						strings.Split(pf.References, "(")[0])
 					forwardStatements = append(forwardStatements,
 						fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s;",
@@ -452,16 +455,17 @@ func GenerateSQLStatements(tableName string, currentFields, prevFields []Field) 
 					if len(parts) == 2 {
 						refTable := parts[0]
 						refColumn := strings.TrimSuffix(parts[1], ")")
-						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cf.Name, refTable)
+						println(refColumn)
+						fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, cfSnake, refTable)
 						forwardStatements = append(forwardStatements,
 							fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);",
-								tableName, fkName, cf.Name, refTable, refColumn))
+								tableName, fkName, cfSnake, refTable, refColumn))
 					}
 				}
 
 				undoStatements = append(undoStatements,
 					fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s::%s;",
-						tableName, cf.Name, pf.SQLType, cf.Name, pf.SQLType))
+						tableName, cfSnake, pf.SQLType, cfSnake, pf.SQLType))
 			}
 		}
 

@@ -12,13 +12,13 @@ type Product struct {
 }
 
 type Variant struct {
-	ID        int
-	ProductID int `foreign:Product(ID)` //or just Product_ID
-	Color     string
-	Stock     int
-	Cents     int64
-	Price     float64
-	ImagePath string
+	ID         int
+	Product_ID int //`foreign:Product(ID)` //or just Product_ID
+	Color      string
+	Stock      int
+	Cents      int64
+	Price      float64
+	ImagePath  string
 }
 
 // //size
