@@ -25,7 +25,7 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 	// Then insert the variants into the variants table
 	for _, v := range variants {
 		sqlVariant := `
-			INSERT INTO variants (product_id, color, stock, price, image_path)
+			INSERT INTO variants (product_id, color, stock, cents, image_path)
 			VALUES ($1, $2, $3, $4, $5)
 		`
 		_, err := db.Exec(ctx, sqlVariant, productID, v.Color, v.Stock, v.Cents, v.ImagePath)
@@ -41,7 +41,7 @@ func InsertProduct(title, author, description string, variants []models.Variant)
 func SearchProducts(query string) ([]models.Product, error) {
 	rows, err := db.Query(ctx, `
 		SELECT b.id, b.title, b.author, b.description,
-		       v.color, v.stock, v.price, v.image_path
+		       v.color, v.stock, v.cents, v.image_path
 		FROM products b
 		LEFT JOIN variants v ON b.id = v.product_id
 		WHERE b.title % $1 OR b.author % $1
@@ -155,7 +155,7 @@ func GetAllProducts() ([]models.Product, error) {
 	// Query to join product with variants
 	rows, err := db.Query(context.Background(), `
 		SELECT b.id, b.title, b.author, b.description, 
-		       v.color, v.stock, v.price, v.image_path
+		       v.color, v.stock, v.cents, v.image_path
 		FROM products b
 		LEFT JOIN variants v ON b.id = v.product_id
 		ORDER BY b.id, v.color
