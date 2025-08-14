@@ -12,7 +12,7 @@ func GetVariantByID(variant_id int) (models.Variant, error) {
 	var v models.Variant
 
 	err := db.QueryRow(context.Background(), `
-		SELECT id, color, stock, price, image_path
+		SELECT id, color, stock, cents, image_path
 		FROM variants
 		WHERE id = $1
 	`, variant_id).Scan(&v.ID, &v.Color, &v.Stock, &v.Cents, &v.ImagePath)
@@ -31,7 +31,7 @@ func GetVariantsByProductID(product_id int) ([]models.Variant, error) {
 
 	// Query for variants associated with the product
 	rows, err := db.Query(context.Background(), `
-		SELECT id, color, stock, price, image_path
+		SELECT id, color, stock, cents, image_path
 		FROM variants
 		WHERE product_id = $1
 	`, product_id)
@@ -60,7 +60,7 @@ func UpdateProductVariants(product_id int, variants []models.Variant) error {
 	for _, variant := range variants {
 		queryVariant := `
 			UPDATE variants
-			SET color=$1, stock=$2, price=$3, image_path=$4
+			SET color=$1, stock=$2, cents=$3, image_path=$4
 			WHERE product_id=$5 AND color=$1
 		`
 		_, err := db.Exec(ctx, queryVariant, variant.Color, variant.Stock, variant.Cents, variant.ImagePath, product_id)
@@ -75,7 +75,7 @@ func UpdateProductVariants(product_id int, variants []models.Variant) error {
 func UpdateProductVariantByID(variant models.Variant) error {
 	query := `
 		UPDATE variants
-		SET color = $1, stock = $2, price = $3, image_path = $4
+		SET color = $1, stock = $2, cents = $3, image_path = $4
 		WHERE id = $5
 	`
 	_, err := db.Exec(ctx, query, variant.Color, variant.Stock, variant.Cents, variant.ImagePath, variant.ID)
@@ -86,11 +86,11 @@ func UpdateProductVariantByID(variant models.Variant) error {
 	return nil
 }
 
-func InsertVariant(product_id int, color string, stock int, price int64, imagePath string) error {
+func InsertVariant(product_id int, color string, stock int, cents int64, imagePath string) error {
 	_, err := db.Exec(ctx, `
-		INSERT INTO variants (product_id, color, stock, price, image_path)
+		INSERT INTO variants (product_id, color, stock, cents, image_path)
 		VALUES ($1, $2, $3, $4, $5)
-	`, product_id, color, stock, price, imagePath)
+	`, product_id, color, stock, cents, imagePath)
 	if err != nil {
 		log.Printf("InsertVariant error: %v\n", err)
 	}
